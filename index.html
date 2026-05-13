@@ -1345,5 +1345,76 @@
 </div><!-- /phone-shell -->
 <!-- All modals injected by app.js -->
 <script src="app.js"></script>
-</body>
+<!-- ══════════════════════════════
+     FINAL ODOMETER SCREEN
+══════════════════════════════ -->
+<div class="fs-overlay" id="finalOdoScreen" style="display:none;">
+  <div class="fs-panel">
+    <div class="fs-topbar">
+      <button class="fs-back" onclick="closeOverlay('finalOdoScreen')">‹</button>
+      <span class="fs-title">Odometer Reading</span>
+    </div>
+
+    <div class="fs-body" style="overflow-y:auto;">
+
+      <!-- ── Initial Odometer Reading (read-only) ── -->
+      <div style="font-size:13px;font-weight:700;color:#1a2540;margin-bottom:10px;">Initial Odometer Reading</div>
+
+      <div style="position:relative;width:100%;height:140px;border-radius:12px;overflow:hidden;background:#f0f1f5;margin-bottom:6px;display:flex;align-items:center;justify-content:center;">
+        <img id="finalOdoInitPhoto" style="display:none;width:100%;height:100%;object-fit:cover;" alt="initial odo"/>
+        <div id="finalOdoInitPlaceholder" style="display:flex;flex-direction:column;align-items:center;gap:6px;color:#aaa;">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.8" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <span style="font-size:11px;">No photo</span>
+        </div>
+        <!-- Side action icons (decorative, read-only) -->
+        <div class="odo-cam-actions">
+          <div class="odo-cam-action-btn green"><svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg></div>
+          <div class="odo-cam-action-btn green"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+          <div class="odo-cam-action-btn green"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;background:#f8f9fc;border:1px solid #e0e3ec;border-radius:10px;padding:10px 14px;margin-bottom:22px;">
+        <span id="finalOdoInitKm" style="font-size:15px;font-weight:700;color:#1a2540;">— KM</span>
+        <span style="font-size:12px;color:#8a90a0;font-weight:600;">KM</span>
+      </div>
+
+      <!-- ── Final Odometer Reading (editable) ── -->
+      <div style="font-size:13px;font-weight:700;color:#1a2540;margin-bottom:10px;">Final Odometer Reading</div>
+
+      <div class="odo-cam-box" id="finalOdoCamBox" onclick="document.getElementById('finalOdoCamInput').click()" style="margin-bottom:6px;">
+        <input type="file" id="finalOdoCamInput" accept="image/*" capture="environment" style="display:none;" onchange="handleFinalOdoPhoto(event)"/>
+        <div class="odo-cam-placeholder" id="finalOdoCamPlaceholder">
+          <div class="odo-cam-icon">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.8" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </div>
+        </div>
+        <img id="finalOdoCamPreview" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:10px;" alt="final odometer"/>
+        <div class="odo-cam-actions">
+          <div class="odo-cam-action-btn green"><svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg></div>
+          <div class="odo-cam-action-btn green"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+          <div class="odo-cam-action-btn green"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+        </div>
+      </div>
+
+      <div class="odo-km-row" style="margin-bottom:8px;">
+        <input id="finalOdoKmInput" class="odo-km-input" type="number" placeholder="Enter odometer reading (end)" min="0"/>
+        <span class="odo-km-unit">KM</span>
+      </div>
+      <div id="finalOdoErr" style="display:none;font-size:11px;color:#e74c3c;font-weight:600;text-align:center;margin-bottom:8px;"></div>
+
+    </div>
+
+    <div class="fs-footer">
+      <button class="fs-proceed-btn" onclick="submitFinalOdo()">Proceed</button>
+    </div>
+
+    <div class="android-nav" style="background:white;border-top:1px solid #eee;">
+      <span style="font-size:16px;color:#555;">|||</span>
+      <span style="font-size:18px;color:#555;">○</span>
+      <span style="font-size:18px;color:#555;">‹</span>
+    </div>
+  </div>
+</div>
+
+
 </html>

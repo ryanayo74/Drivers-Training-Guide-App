@@ -776,6 +776,10 @@ function submitOdoCam() {
   if (!hasImg) { err.textContent=t('odoErrPhoto'); err.style.display='block'; setTimeout(()=>err.style.display='none',2500); return; }
   if (!km||isNaN(km)||Number(km)<=0) { err.textContent=t('odoErrKm'); err.style.display='block'; setTimeout(()=>err.style.display='none',2500); return; }
 
+  // Save initial odometer data for display in Final Odometer screen
+  window.initialOdoKm  = km;
+  window.initialOdoSrc = document.getElementById('odoCamPreview').src;
+
   closeOverlay('odoReadingScreen');
   window.odoLogged = true;
 
@@ -1506,20 +1510,60 @@ function openCollDetail(type) {
 }
 
 function openFinalOdometer() {
-  // Block if deliveries not all done (shouldn't normally reach here from Collections,
-  // but guard in case called directly)
   if (!allDeliveriesDone()) {
     showIncompleteDeliveriesModal();
     return;
   }
-  const label = document.getElementById('odoScreenLabel');
-  const title = document.getElementById('odoScreenTitle');
-  const btn   = document.getElementById('odoScreenProceed');
-  if (label) label.textContent = 'Final Odometer Reading';
-  if (title) title.textContent = 'Final Odometer Reading';
-  if (btn)   btn.textContent   = 'Proceed';
-  window._isFinalOdo = true;
-  openOverlay('odoReadingScreen');
+  // Pre-fill initial odometer section
+  const initImg = document.getElementById('finalOdoInitPhoto');
+  const initKm  = document.getElementById('finalOdoInitKm');
+  if (initImg && window.initialOdoSrc) { initImg.src = window.initialOdoSrc; initImg.style.display = 'block'; }
+  if (initKm  && window.initialOdoKm)  { initKm.textContent = Number(window.initialOdoKm).toLocaleString() + ' KM'; }
+  // Reset final section
+  const finalPreview = document.getElementById('finalOdoCamPreview');
+  const finalPlaceholder = document.getElementById('finalOdoCamPlaceholder');
+  const finalKmInput = document.getElementById('finalOdoKmInput');
+  if (finalPreview) { finalPreview.style.display = 'none'; finalPreview.src = ''; }
+  if (finalPlaceholder) finalPlaceholder.style.display = 'flex';
+  if (finalKmInput) finalKmInput.value = '';
+  openOverlay('finalOdoScreen');
+}
+
+function handleFinalOdoPhoto(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const preview = document.getElementById('finalOdoCamPreview');
+    const placeholder = document.getElementById('finalOdoCamPlaceholder');
+    if (preview) { preview.src = ev.target.result; preview.style.display = 'block'; }
+    if (placeholder) placeholder.style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function submitFinalOdo() {
+  const hasImg = document.getElementById('finalOdoCamPreview').style.display === 'block';
+  const km     = document.getElementById('finalOdoKmInput').value.trim();
+  const err    = document.getElementById('finalOdoErr');
+  if (!hasImg) { err.textContent = 'Please take a photo of the odometer.'; err.style.display='block'; setTimeout(()=>err.style.display='none',2500); return; }
+  if (!km || isNaN(km) || Number(km) <= 0) { err.textContent = 'Please enter a valid KM reading.'; err.style.display='block'; setTimeout(()=>err.style.display='none',2500); return; }
+  const initKm = Number(window.initialOdoKm || 0);
+  if (Number(km) <= initKm) { err.textContent = 'Final reading must be greater than initial reading.'; err.style.display='block'; setTimeout(()=>err.style.display='none',2500); return; }
+
+  // Show success popup
+  closeOverlay('finalOdoScreen');
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:8999;';
+  const popup = document.createElement('div');
+  popup.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;border-radius:20px;padding:28px 24px 20px;width:260px;text-align:center;z-index:9000;box-shadow:0 20px 60px rgba(0,0,0,.25);animation:guSlideUp .35s cubic-bezier(0.34,1.35,0.64,1);';
+  popup.innerHTML = `
+    <div style="font-size:22px;font-weight:800;color:#22c55e;margin-bottom:8px;">Success</div>
+    <div style="font-size:13px;color:#5a6278;line-height:1.6;margin-bottom:20px;">Successfully uploaded odometer reading</div>
+    <button onclick="this.closest('div[style*=fixed]').remove();this.parentElement.remove();"
+      style="background:#1a2540;color:white;border:none;border-radius:10px;padding:12px 32px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Ok</button>`;
+  document.body.appendChild(overlay);
+  document.body.appendChild(popup);
+  overlay.onclick = () => { overlay.remove(); popup.remove(); };
 }
 
 function showMoreMenuFromColl() { showEndDeliveryGuide(); }
