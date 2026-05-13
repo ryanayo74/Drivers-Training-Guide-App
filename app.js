@@ -9,6 +9,7 @@ const VALID_PASSWORD = 'test';
 let current    = 0;
 let locationOn = false;
 window.odoLogged = false;
+window.skipGuides = false;
 let lang       = 'en';   // 'en' | 'tl'
 
 /* ══════════════════════════════
@@ -545,6 +546,7 @@ function stepCard(opts) {
    ALL GUIDE MODALS  (use t() for translations)
 ══════════════════════════════ */
 function showWelcomeModal() {
+  if (window.skipGuides) return;
   createModal('welcomeModal', `
     <div class="guide-card welcome-card">
       <div style="position:absolute;top:14px;right:14px;">
@@ -578,6 +580,7 @@ function showLangSwitch() {
 }
 
 function showPreReqModal() {
+  if (window.skipGuides) return;
   createModal('preReqModal', stepCard({
     id:'preReqModal', badge:t('preReqBadge'), badgeColor:'#0369a1', badgeLight:'#f0f9ff',
     icon:'✅', title:t('preReqTitle'), steps:t('preReqSteps'), note:t('preReqNote'),
@@ -594,6 +597,7 @@ function showLoginErrorModal() {
 }
 
 function showLocationModal(isRetry) {
+  if (window.skipGuides) return;
   createModal('locationModal', stepCard({
     id:'locationModal',
     badge: isRetry ? t('locBadgeRetry') : t('locBadge'),
@@ -605,6 +609,7 @@ function showLocationModal(isRetry) {
 }
 
 function showOdometerModal(isRetry) {
+  if (window.skipGuides) return;
   createModal('odoGuideModal', stepCard({
     id:'odoGuideModal',
     badge: isRetry ? t('odoBadgeRetry') : t('odoBadge'),
@@ -616,6 +621,7 @@ function showOdometerModal(isRetry) {
 }
 
 function showCustomerGuideModal() {
+  if (window.skipGuides) return;
   createModal('customerGuideModal', stepCard({
     id:'customerGuideModal', badge:t('custBadge'), badgeColor:'#7c3aed', badgeLight:'#f5f3ff',
     icon:'🏪', title:t('custTitle'), steps:t('custSteps'), note:t('custNote'),
@@ -624,6 +630,7 @@ function showCustomerGuideModal() {
 }
 
 function showDeliverySuccessGuide() {
+  if (window.skipGuides) return;
   createModal('delivSuccessModal', stepCard({
     id:'delivSuccessModal', badge:t('succGuideBadge'), badgeColor:'#059669', badgeLight:'#ecfdf5',
     icon:'✅', title:t('succGuideTitle'), steps:t('succGuideSteps'), note:t('succGuideNote'),
@@ -632,6 +639,7 @@ function showDeliverySuccessGuide() {
 }
 
 function showDeliveryFailedGuide() {
+  if (window.skipGuides) return;
   createModal('delivFailModal', stepCard({
     id:'delivFailModal', badge:t('failGuideBadge'), badgeColor:'#dc2626', badgeLight:'#fff0f0',
     icon:'❌', title:t('failGuideTitle'), steps:t('failGuideSteps'), note:t('failGuideNote'),
@@ -640,6 +648,7 @@ function showDeliveryFailedGuide() {
 }
 
 function showEndDeliveryGuide() {
+  if (window.skipGuides) return;
   const stepsHtml = t('endSteps').map((s,i) => `
     <div class="guide-step-item">
       <div class="guide-step-num" style="background:#475569;color:white;">${i+1}</div>
@@ -1550,19 +1559,31 @@ function submitFinalOdo() {
   const initKm = Number(window.initialOdoKm || 0);
   if (Number(km) <= initKm) { err.textContent = 'Final reading must be greater than initial reading.'; err.style.display='block'; setTimeout(()=>err.style.display='none',2500); return; }
 
-  // Show success popup
+  // Show success popup — tapping Ok opens More/Profile screen
   closeOverlay('finalOdoScreen');
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:8999;';
   const popup = document.createElement('div');
   popup.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;border-radius:20px;padding:28px 24px 20px;width:260px;text-align:center;z-index:9000;box-shadow:0 20px 60px rgba(0,0,0,.25);animation:guSlideUp .35s cubic-bezier(0.34,1.35,0.64,1);';
   popup.innerHTML = `
-    <div style="font-size:22px;font-weight:800;color:#22c55e;margin-bottom:8px;">Success</div>
+    <div style="font-size:44px;margin-bottom:6px;">✅</div>
+    <div style="font-size:18px;font-weight:800;color:#22c55e;margin-bottom:8px;">Success</div>
     <div style="font-size:13px;color:#5a6278;line-height:1.6;margin-bottom:20px;">Successfully uploaded odometer reading</div>
-    <button onclick="this.closest('div[style*=fixed]').remove();this.parentElement.remove();"
-      style="background:#1a2540;color:white;border:none;border-radius:10px;padding:12px 32px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Ok</button>`;
+    <button id="finalOdoOkBtn"
+      style="width:100%;background:#1a2540;color:white;border:none;border-radius:10px;padding:14px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">Ok</button>`;
   document.body.appendChild(overlay);
   document.body.appendChild(popup);
+
+  popup.querySelector('#finalOdoOkBtn').onclick = () => {
+    overlay.remove(); popup.remove();
+    // Proceed to More / Profile screen
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2,'0');
+    const mm = String(now.getMinutes()).padStart(2,'0');
+    const el = document.getElementById('moreStatusTime');
+    if (el) el.textContent = `${hh}:${mm}`;
+    openOverlay('moreProfileScreen');
+  };
   overlay.onclick = () => { overlay.remove(); popup.remove(); };
 }
 
@@ -1689,8 +1710,60 @@ function performLogout() {
     flash.style.opacity = '0';
     setTimeout(() => {
       flash.remove();
-      // Show language picker again
-      showLangPicker();
+      // Show "repeat" choice — with or without guide tips
+      showRepeatChoiceModal();
     }, 500);
   }, 1600);
+}
+
+function showRepeatChoiceModal() {
+  const el = document.createElement('div');
+  el.className = 'guide-overlay';
+  el.id = 'repeatChoiceModal';
+  el.innerHTML = `
+    <div class="guide-card" style="border-radius:28px;margin:20px;overflow:hidden;max-width:360px;width:calc(100% - 40px);align-self:center;">
+      <div style="padding:30px 24px 26px;text-align:center;">
+        <div style="font-size:42px;margin-bottom:12px;">🔄</div>
+        <h2 style="font-size:19px;font-weight:800;color:#1a2540;margin-bottom:8px;">Session Complete!</h2>
+        <p style="font-size:13px;color:#6a7090;line-height:1.55;margin-bottom:26px;">Great work! Would you like to run through the training again?</p>
+
+        <!-- With tips -->
+        <button onclick="repeatWithTips()" style="
+          width:100%;padding:15px;background:#1a2540;color:white;border:none;
+          border-radius:14px;font-family:'DM Sans',sans-serif;font-size:15px;
+          font-weight:700;cursor:pointer;margin-bottom:10px;
+          box-shadow:0 4px 14px rgba(26,37,64,.25);
+          display:flex;align-items:center;justify-content:center;gap:8px;">
+          <span>🎓</span>
+          <span>Repeat with Guide Tips</span>
+        </button>
+
+        <!-- Without tips -->
+        <button onclick="repeatWithoutTips()" style="
+          width:100%;padding:15px;background:white;color:#1a2540;
+          border:2px solid #1a2540;border-radius:14px;
+          font-family:'DM Sans',sans-serif;font-size:15px;
+          font-weight:700;cursor:pointer;
+          display:flex;align-items:center;justify-content:center;gap:8px;">
+          <span>⚡</span>
+          <span>Repeat without Tips</span>
+        </button>
+
+        <div style="margin-top:14px;font-size:11px;color:#9aa0b0;">Choose how you'd like to practice</div>
+      </div>
+    </div>`;
+  document.body.appendChild(el);
+}
+
+function repeatWithTips() {
+  dismissModal('repeatChoiceModal');
+  // Full restart: language picker → welcome → all guide modals throughout
+  window.skipGuides = false;
+  setTimeout(() => showLangPicker(), 350);
+}
+
+function repeatWithoutTips() {
+  dismissModal('repeatChoiceModal');
+  // Skip all guide modals — user gets straight flow, no tip popups
+  window.skipGuides = true;
 }
