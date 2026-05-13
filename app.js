@@ -1566,4 +1566,131 @@ function submitFinalOdo() {
   overlay.onclick = () => { overlay.remove(); popup.remove(); };
 }
 
-function showMoreMenuFromColl() { showEndDeliveryGuide(); }
+function showMoreMenuFromColl() {
+  // Update the clock in the status bar
+  const now = new Date();
+  const h = now.getHours(), m = now.getMinutes();
+  const hh = String(h).padStart(2,'0'), mm = String(m).padStart(2,'0');
+  const el = document.getElementById('moreStatusTime');
+  if (el) el.textContent = `${hh}:${mm}`;
+  openOverlay('moreProfileScreen');
+}
+
+function doLogout() {
+  // Confirm logout
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9998;display:flex;align-items:center;justify-content:center;';
+  overlay.innerHTML = `
+    <div style="background:white;border-radius:20px;padding:28px 24px 22px;width:270px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:guSlideUp .3s cubic-bezier(0.34,1.35,0.64,1);">
+      <div style="font-size:36px;margin-bottom:10px;">🚪</div>
+      <div style="font-size:17px;font-weight:800;color:#1a2540;margin-bottom:8px;">Logout?</div>
+      <div style="font-size:13px;color:#6a7090;line-height:1.55;margin-bottom:22px;">Are you sure you want to end your session?</div>
+      <div style="display:flex;gap:10px;">
+        <button id="logoutCancelBtn" style="flex:1;padding:13px;border-radius:12px;border:1.5px solid #e0e3ec;background:white;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;color:#5a6278;cursor:pointer;">Cancel</button>
+        <button id="logoutConfirmBtn" style="flex:1;padding:13px;border-radius:12px;border:none;background:#e74c3c;color:white;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(231,76,60,.3);">Logout</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  overlay.querySelector('#logoutCancelBtn').onclick = () => overlay.remove();
+  overlay.querySelector('#logoutConfirmBtn').onclick = () => {
+    overlay.remove();
+    performLogout();
+  };
+}
+
+function performLogout() {
+  // Show a brief "Logging out..." flash then reset the whole app back to login
+  const flash = document.createElement('div');
+  flash.style.cssText = 'position:fixed;inset:0;background:#1a2540;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;';
+  flash.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="display:flex;align-items:flex-end;gap:2px;height:22px;">
+        <span style="display:block;width:4px;height:10px;background:white;border-radius:2px;"></span>
+        <span style="display:block;width:4px;height:16px;background:white;border-radius:2px;"></span>
+        <span style="display:block;width:4px;height:22px;background:white;border-radius:2px;"></span>
+        <span style="display:block;width:4px;height:14px;background:white;border-radius:2px;"></span>
+        <span style="display:block;width:4px;height:8px; background:white;border-radius:2px;"></span>
+      </div>
+      <span style="font-size:20px;font-weight:700;color:white;letter-spacing:-.5px;">Stackbox</span>
+    </div>
+    <div style="font-size:13px;color:rgba(255,255,255,.55);font-weight:500;">Logging out…</div>
+    <div style="display:flex;gap:6px;">
+      <div style="width:8px;height:8px;background:rgba(255,255,255,.3);border-radius:50%;animation:dotPulse 1.2s .0s ease infinite;"></div>
+      <div style="width:8px;height:8px;background:rgba(255,255,255,.3);border-radius:50%;animation:dotPulse 1.2s .2s ease infinite;"></div>
+      <div style="width:8px;height:8px;background:rgba(255,255,255,.3);border-radius:50%;animation:dotPulse 1.2s .4s ease infinite;"></div>
+    </div>`;
+  document.body.appendChild(flash);
+
+  setTimeout(() => {
+    // Close all overlays
+    ['moreProfileScreen','collectionsScreen','collDetailScreen','finalOdoScreen',
+     'customerDetailScreen','deliveryScreen','proofScreen','failedReasonScreen',
+     'failConfirmScreen','odoReadingScreen'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.style.display = 'none'; el.style.animation = ''; }
+    });
+    // Dismiss any floating modals
+    document.querySelectorAll('.guide-overlay').forEach(el => el.remove());
+
+    // Reset state
+    window.odoLogged = false;
+    locationOn = false;
+    window.custOutcomes = { 1: null, 2: null, 3: null, 4: null };
+    window.initialOdoKm = null;
+    window.initialOdoSrc = null;
+    window.activeCustomer = 1;
+
+    // Reset odometer button
+    const odoBtn = document.getElementById('odoBtn');
+    if (odoBtn) {
+      odoBtn.classList.remove('logged');
+      odoBtn.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1a2540" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>`;
+    }
+    // Reset customer list statuses
+    for (let n = 1; n <= 4; n++) {
+      window.custOutcomes[n] = null;
+      const statusEl = document.getElementById('custStatus' + n);
+      const numEl    = document.getElementById('custNum' + n);
+      if (statusEl) { statusEl.textContent = 'Not visited'; statusEl.style.color = '#4a7ad4'; }
+      if (numEl)    { numEl.style.background = '#1a2540'; }
+    }
+    // Reset tab counts
+    ['tabPending','tabSuccess','tabFailed','tabPartial'].forEach((id,i) => {
+      const el = document.getElementById(id);
+      const labels = ['Pending','Success','Failed','Partial'];
+      if (el) { el.innerHTML = (i===0?4:0) + `<div class="odo-tab-lbl">${labels[i]}</div>`; el.style.color=''; }
+    });
+    // Re-lock customer list
+    const blurEl = document.getElementById('odoBlurOverlay');
+    const listWrap = document.getElementById('odoListWrap');
+    if (listWrap) { listWrap.classList.remove('unlocked'); listWrap.classList.add('locked'); }
+    // Restore blur overlay if missing
+    if (!blurEl && listWrap) {
+      const newBlur = document.createElement('div');
+      newBlur.id = 'odoBlurOverlay';
+      newBlur.className = 'odo-blur-overlay';
+      newBlur.innerHTML = `<div class="odo-lock-badge"><span>🔒</span><span>${t('lockLabel')}</span></div>`;
+      listWrap.parentNode.insertBefore(newBlur, listWrap.nextSibling);
+    }
+    // Reset location dot
+    const locDot = document.getElementById('locDot');
+    if (locDot) locDot.textContent = '⚪';
+    // Reset login fields
+    const userField = document.getElementById('loginUser');
+    const passField = document.getElementById('loginPass');
+    if (userField) userField.value = '';
+    if (passField) passField.value = '';
+    // Go to login screen
+    goTo(0);
+
+    // Remove flash with fade
+    flash.style.transition = 'opacity .5s ease';
+    flash.style.opacity = '0';
+    setTimeout(() => {
+      flash.remove();
+      // Show language picker again
+      showLangPicker();
+    }, 500);
+  }, 1600);
+}
