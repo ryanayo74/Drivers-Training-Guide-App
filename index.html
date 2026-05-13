@@ -896,7 +896,7 @@
 <div class="fs-overlay" id="proofScreen" style="display:none;">
   <div class="fs-panel">
     <div class="fs-topbar">
-      <button class="fs-back" onclick="closeOverlay('proofScreen');document.getElementById('deliveryScreen').style.display='flex';">‹</button>
+      <button class="fs-back" onclick="if(window.proofMode==='failed'){closeOverlay('proofScreen');setTimeout(()=>openOverlay('failedReasonScreen'),280);}else{closeOverlay('proofScreen');document.getElementById('deliveryScreen').style.display='flex';}">‹</button>
       <span class="fs-title" id="proofTitleLbl">Proof of Delivery</span>
     </div>
     <div class="fs-body">

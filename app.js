@@ -785,12 +785,19 @@ window.customers = [
 window.custOutcomes = { 1: null, 2: null, 3: null, 4: null }; // null | 'success' | 'failed'
 
 function openCust(n) {
+  // Block if already completed
+  if (window.custOutcomes[n]) {
+    showToast('⚠️ This customer is already completed.');
+    return;
+  }
   window.activeCustomer = n;
   updateCustomerDetailText();
   openOverlay('customerDetailScreen');
-  // Show appropriate guide (only if not yet resolved)
-  if (!window.custOutcomes[n]) {
+  // Customer 1 → Success guide; Customer 2 → Fail guide; 3+ → no modal
+  if (n === 1) {
     setTimeout(() => showDeliverySuccessGuide(), 350);
+  } else if (n === 2) {
+    setTimeout(() => showDeliveryFailedGuide(), 350);
   }
 }
 
@@ -848,40 +855,55 @@ function updateListItemStatus(n, outcome) {
   window.custOutcomes[n] = outcome;
   const statusEl = document.getElementById('custStatus' + n);
   const numEl    = document.getElementById('custNum' + n);
+  const itemEl   = document.getElementById('custItem' + n);
   if (outcome === 'success') {
     if (statusEl) { statusEl.textContent = 'Success'; statusEl.style.color = '#22c55e'; }
     if (numEl)    numEl.style.background = '#22c55e';
   } else if (outcome === 'failed') {
     if (statusEl) { statusEl.textContent = 'Failed'; statusEl.style.color = '#e74c3c'; }
     if (numEl)    numEl.style.background = '#e74c3c';
+  } else if (outcome === 'partial') {
+    if (statusEl) { statusEl.textContent = 'Partial'; statusEl.style.color = '#f59e0b'; }
+    if (numEl)    numEl.style.background = '#f59e0b';
+  }
+  // Lock the row
+  if (itemEl) {
+    itemEl.style.opacity = '0.5';
+    itemEl.style.pointerEvents = 'none';
+    itemEl.style.cursor = 'default';
   }
   // Update tabs
   const allOutcomes = Object.values(window.custOutcomes);
   const successCount = allOutcomes.filter(o => o === 'success').length;
   const failedCount  = allOutcomes.filter(o => o === 'failed').length;
-  const pendingCount = 4 - successCount - failedCount;
+  const partialCount = allOutcomes.filter(o => o === 'partial').length;
+  const pendingCount = 4 - successCount - failedCount - partialCount;
   const tabP = document.getElementById('tabPending');
   const tabS = document.getElementById('tabSuccess');
   const tabF = document.getElementById('tabFailed');
-  if (tabP) tabP.innerHTML = pendingCount + `<div class="odo-tab-lbl">Pending</div>`;
-  if (tabS) { tabS.innerHTML = successCount + `<div class="odo-tab-lbl">Success</div>`; tabS.style.color = successCount ? '#22c55e' : ''; }
-  if (tabF) { tabF.innerHTML = failedCount  + `<div class="odo-tab-lbl">Failed</div>`;  tabF.style.color = failedCount  ? '#e74c3c' : ''; }
+  const tabPart = document.getElementById('tabPartial');
+  if (tabP)    tabP.innerHTML = pendingCount + `<div class="odo-tab-lbl">Pending</div>`;
+  if (tabS)    { tabS.innerHTML = successCount + `<div class="odo-tab-lbl">Success</div>`; tabS.style.color = successCount ? '#22c55e' : ''; }
+  if (tabF)    { tabF.innerHTML = failedCount  + `<div class="odo-tab-lbl">Failed</div>`;  tabF.style.color = failedCount  ? '#e74c3c' : ''; }
+  if (tabPart) { tabPart.innerHTML = partialCount + `<div class="odo-tab-lbl">Partial</div>`; tabPart.style.color = partialCount ? '#f59e0b' : ''; }
 }
 function openDeliveryScreen() {
   updateDeliveryScreenText();
+  // Reset all item checkboxes for this new delivery
+  for (let i = 1; i <= DELIV_CHECK_TOTAL; i++) {
+    delivChecked[i] = false;
+    setDelivCheckState('delivCheck' + i, false);
+  }
+  setDelivCheckState('delivCheckAll', false);
   closeOverlay('customerDetailScreen');
   setTimeout(()=>openOverlay('deliveryScreen'),280);
 }
 function showDeliverySuccessGuide_then_proof() {
-  showDeliverySuccessGuide();
-  // After guide is dismissed, show proof screen automatically
-  const orig = dismissModal;
-  const check = setInterval(() => {
-    if (!document.getElementById('delivSuccessModal')) {
-      clearInterval(check);
-      showProofScreen();
-    }
-  }, 300);
+  // Check if all items are ticked — if not, this will be Partial
+  const allChecked = Array.from({length: DELIV_CHECK_TOTAL}, (_, i) => !!delivChecked[i + 1]).every(Boolean);
+  window.deliveryIsPartial = !allChecked;
+  window.proofMode = 'success';
+  showProofScreen();
 }
 
 function showProofScreen() {
@@ -987,15 +1009,26 @@ function showDeliveryFailedConfirm() {
     if (noPhoto) noPhoto.style.display = 'block';
   }
 
+  // Route through Proof of Delivery before showing confirm
+  window.proofMode = 'failed';
   closeOverlay('failedReasonScreen');
-  setTimeout(() => openOverlay('failedConfirmScreen'), 280);
+  setTimeout(() => showProofScreen(), 280);
 }
 
 function finishFailedDelivery() {
   const n = window.activeCustomer || 1;
+  const reasonIdx = (window.selectedFailReason || 1) - 1;
+  const reason = window.failReasonLabels[reasonIdx];
+  // "Wrong order" → Partial; everything else → Failed
+  const outcome = (reason === 'Wrong order') ? 'partial' : 'failed';
   closeOverlay('failedConfirmScreen');
-  updateListItemStatus(n, 'failed');
-  showToast(t('failToast') || 'Delivery marked as failed');
+  // Reset proof screen for next use
+  clearSig(); sigCtx = null;
+  const prev = document.getElementById('proofPhotoPreview'); if(prev){prev.style.display='none'; prev.src='';}
+  const ph = document.getElementById('proofPhotoPlaceholder'); if(ph) ph.style.display='flex';
+  window.proofMode = null;
+  updateListItemStatus(n, outcome);
+  showToast(outcome === 'partial' ? '⚠️ Delivery marked as partial' : (t('failToast') || 'Delivery marked as failed'));
 }
 
 /* ── Item Checkboxes ── */
@@ -1066,6 +1099,18 @@ function submitProof() {
   if (!hasPhoto){ err.textContent=t('proofErrPhoto'); err.style.display='block'; setTimeout(()=>err.style.display='none',2500); return; }
   if (!hasSig)  { err.textContent=t('proofErrSig');   err.style.display='block'; setTimeout(()=>err.style.display='none',2500); return; }
 
+  if (window.proofMode === 'failed') {
+    // Failed flow — go to failed confirm screen, carrying the proof photo
+    const proofSrc = document.getElementById('proofPhotoPreview').src;
+    const confirmPhoto = document.getElementById('failConfirmPhoto');
+    const noPhoto = document.getElementById('failConfirmNoPhoto');
+    if (proofSrc && confirmPhoto) { confirmPhoto.src = proofSrc; confirmPhoto.style.display = 'block'; if(noPhoto) noPhoto.style.display='none'; }
+    closeOverlay('proofScreen');
+    setTimeout(()=>openOverlay('failedConfirmScreen'), 280);
+    return;
+  }
+
+  // Success flow
   // Copy sig to success preview
   const src=document.getElementById('sigCanvas'), dest=document.getElementById('successSigPreview');
   if (src&&dest){ const dc=dest.getContext('2d'); dc.clearRect(0,0,dest.width,dest.height); dc.drawImage(src,0,0,dest.width,dest.height); }
@@ -1087,9 +1132,12 @@ function finishDelivery() {
   clearSig(); sigCtx=null;
   const prev=document.getElementById('proofPhotoPreview'); if(prev){prev.style.display='none';prev.src='';}
   const ph=document.getElementById('proofPhotoPlaceholder'); if(ph) ph.style.display='flex';
-  updateListItemStatus(n, 'success');
+  // If not all items were checked, mark as Partial instead of Success
+  const outcome = window.deliveryIsPartial ? 'partial' : 'success';
+  window.deliveryIsPartial = false;
+  updateListItemStatus(n, outcome);
   window.deliveryDone = true;
-  showToast(t('successToast'));
+  showToast(outcome === 'partial' ? '⚠️ Delivery marked as partial (not all items checked)' : t('successToast'));
 }
 
 /* ══════════════════════════════
