@@ -968,6 +968,21 @@ function updateListItemStatus(n, outcome) {
   if (tabS)    { tabS.innerHTML = successCount + `<div class="odo-tab-lbl">Success</div>`; tabS.style.color = successCount ? '#22c55e' : ''; }
   if (tabF)    { tabF.innerHTML = failedCount  + `<div class="odo-tab-lbl">Failed</div>`;  tabF.style.color = failedCount  ? '#e74c3c' : ''; }
   if (tabPart) { tabPart.innerHTML = partialCount + `<div class="odo-tab-lbl">Partial</div>`; tabPart.style.color = partialCount ? '#f59e0b' : ''; }
+
+  // Auto-guide to End Day when all 4 deliveries are done
+  const totalDone = successCount + failedCount + partialCount;
+  if (totalDone === 4) {
+    const collNav = document.querySelector('.odo-bottom-nav .odo-nav-item:nth-child(2)');
+    if (collNav) {
+      collNav.style.transition = 'transform .2s';
+      collNav.style.transform = 'scale(1.22)';
+      setTimeout(() => { if(collNav) collNav.style.transform = ''; }, 700);
+    }
+    setTimeout(() => {
+      showToast('\u2705 All deliveries done! Tap Collections \u2192');
+      setTimeout(() => showEndDeliveryGuide(), 1400);
+    }, 700);
+  }
 }
 function openDeliveryScreen() {
   updateDeliveryScreenText();
@@ -1348,3 +1363,163 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+/* ══════════════════════════════
+   COLLECTIONS SCREEN
+══════════════════════════════ */
+const collData = {
+  cash:    { name:'CASH',    inv:0, ret:0, amt:0,  color:'#27ae60' },
+  prepaid: { name:'PREPAID', inv:0, ret:0, amt:0,  color:'#2980b9' },
+  credit:  { name:'CREDIT',  inv:3, ret:3, amt:19, color:'#e67e22' },
+  cheque:  { name:'CHEQUE',  inv:0, ret:0, amt:0,  color:'#7c3aed' },
+  pdc:     { name:'PDC',     inv:0, ret:0, amt:0,  color:'#c0392b' },
+};
+
+/* ── Helper: are all 4 customers done (success / failed / partial)? ── */
+function allDeliveriesDone() {
+  return Object.values(window.custOutcomes).every(o => o !== null);
+}
+
+/* ── Count pending customers for the blocker message ── */
+function pendingCount() {
+  return Object.values(window.custOutcomes).filter(o => o === null).length;
+}
+
+/* ── Modal shown when Collections / Final Odo is tapped too early ── */
+function showIncompleteDeliveriesModal() {
+  const remaining = pendingCount();
+  dismissModal('incompleteDelivModal');
+
+  const el = document.createElement('div');
+  el.className = 'guide-overlay';
+  el.id = 'incompleteDelivModal';
+  el.innerHTML = `
+    <div class="guide-card" style="border-radius:28px;margin:24px;overflow:hidden;max-width:340px;width:calc(100% - 48px);align-self:center;">
+      <div style="padding:28px 24px 24px;text-align:center;">
+
+        <!-- Warning icon circle -->
+        <div style="width:68px;height:68px;border-radius:50%;background:#fff3e0;border:2.5px solid #fb923c;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+
+        <div style="font-size:18px;font-weight:800;color:#1a2540;margin-bottom:8px;letter-spacing:-.3px;">
+          Complete Deliveries First
+        </div>
+        <div style="font-size:13px;color:#6a7090;line-height:1.6;margin-bottom:6px;">
+          You still have <strong style="color:#ea580c;">${remaining} pending customer${remaining!==1?'s':''}</strong> to complete.
+        </div>
+        <div style="font-size:12px;color:#9aa0b0;margin-bottom:22px;line-height:1.5;">
+          Return to the delivery list and mark all customers as <strong>Delivered</strong> or <strong>Failed</strong> before accessing Collections.
+        </div>
+
+        <!-- Progress bar -->
+        <div style="background:#f0f1f5;border-radius:20px;height:8px;margin-bottom:20px;overflow:hidden;">
+          <div style="background:#1a2540;height:100%;border-radius:20px;transition:width .4s;width:${Math.round((4-remaining)/4*100)}%;"></div>
+        </div>
+        <div style="font-size:11px;color:#8a90a0;margin-bottom:20px;">${4-remaining} of 4 customers done</div>
+
+        <button onclick="dismissModal('incompleteDelivModal')" style="
+          width:100%;padding:15px;background:#1a2540;color:white;border:none;
+          border-radius:14px;font-family:'DM Sans',sans-serif;font-size:15px;
+          font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(26,37,64,.25);
+          letter-spacing:.2px;">
+          Back to Deliveries
+        </button>
+      </div>
+    </div>`;
+  document.body.appendChild(el);
+}
+
+function openCollections() {
+  if (!allDeliveriesDone()) {
+    showIncompleteDeliveriesModal();
+    return;
+  }
+  const d = new Date();
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const dateStr = `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+  const el = document.getElementById('collDate');
+  if (el) el.textContent = dateStr;
+  openOverlay('collectionsScreen');
+}
+
+function openCollDetail(type) {
+  const d = collData[type];
+  if (!d) return;
+  document.getElementById('collDetailTitle').textContent = d.name;
+
+  const retailers = type === 'credit' ? [
+    { name:'VS NORTH ALBAY – A. BOSOTROS', code:'5239_STO',    inv:1, amt:7 },
+    { name:'VS WEST ALBAY – I. DOROMAL',   code:'5240_LIGAO',  inv:1, amt:6 },
+    { name:'VS SOUTH ALBAY – R. ILUSTRE',  code:'5241_LEGAZPI',inv:1, amt:6 },
+  ] : [];
+
+  const euroColor = d.color;
+  const body = document.getElementById('collDetailBody');
+
+  let html = `
+    <div style="background:white;border-radius:16px;padding:18px 16px;margin-bottom:12px;box-shadow:0 1px 5px rgba(0,0,0,.07);">
+      <div style="font-size:13px;font-weight:700;color:#8a90a0;text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;">${d.name} Summary</div>
+      <div style="display:flex;gap:0;border-top:1px solid #f0f1f5;padding-top:14px;">
+        <div style="flex:1;text-align:center;border-right:1px solid #eef0f5;">
+          <div style="font-size:20px;font-weight:800;color:${euroColor};">€${d.amt}</div>
+          <div style="font-size:11px;color:#8a90a0;margin-top:3px;font-weight:500;">Total</div>
+        </div>
+        <div style="flex:1;text-align:center;border-right:1px solid #eef0f5;">
+          <div style="font-size:20px;font-weight:800;color:#1a2540;">${d.inv}</div>
+          <div style="font-size:11px;color:#8a90a0;margin-top:3px;font-weight:500;">Invoices</div>
+        </div>
+        <div style="flex:1;text-align:center;">
+          <div style="font-size:20px;font-weight:800;color:#1a2540;">${d.ret}</div>
+          <div style="font-size:11px;color:#8a90a0;margin-top:3px;font-weight:500;">Retailers</div>
+        </div>
+      </div>
+    </div>`;
+
+  if (retailers.length > 0) {
+    html += `<div style="font-size:12px;font-weight:700;color:#8a90a0;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;padding-left:4px;">Retailers</div>`;
+    retailers.forEach(r => {
+      html += `
+        <div style="background:white;border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 5px rgba(0,0,0,.06);display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#1a2540;line-height:1.3;">${r.name}</div>
+            <div style="font-size:11px;color:#8a90a0;margin-top:3px;">${r.code} · Invoices ${r.inv}</div>
+          </div>
+          <div style="font-size:15px;font-weight:800;color:${euroColor};flex-shrink:0;margin-left:12px;">€${r.amt}</div>
+        </div>`;
+    });
+  } else {
+    html += `
+      <div style="text-align:center;padding:40px 20px;color:#b0b6c4;">
+        <div style="font-size:40px;margin-bottom:12px;">📭</div>
+        <div style="font-size:14px;font-weight:600;">No collections yet</div>
+        <div style="font-size:12px;margin-top:6px;">No ${d.name.toLowerCase()} transactions recorded</div>
+      </div>`;
+  }
+
+  body.innerHTML = html;
+  openOverlay('collDetailScreen');
+}
+
+function openFinalOdometer() {
+  // Block if deliveries not all done (shouldn't normally reach here from Collections,
+  // but guard in case called directly)
+  if (!allDeliveriesDone()) {
+    showIncompleteDeliveriesModal();
+    return;
+  }
+  const label = document.getElementById('odoScreenLabel');
+  const title = document.getElementById('odoScreenTitle');
+  const btn   = document.getElementById('odoScreenProceed');
+  if (label) label.textContent = 'Final Odometer Reading';
+  if (title) title.textContent = 'Final Odometer Reading';
+  if (btn)   btn.textContent   = 'Proceed';
+  window._isFinalOdo = true;
+  openOverlay('odoReadingScreen');
+}
+
+function showMoreMenuFromColl() { showEndDeliveryGuide(); }

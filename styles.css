@@ -644,3 +644,56 @@ body {
 .odo-item.completed .odo-name {
   color: #5a6278;
 }
+
+/* ══════════════════════════════
+   COLLECTIONS SCREEN
+══════════════════════════════ */
+.coll-card {
+  background: white;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 1px 5px rgba(0,0,0,.07);
+  cursor: pointer;
+  transition: box-shadow .18s, transform .1s;
+}
+.coll-card:active { transform: scale(.98); box-shadow: 0 3px 10px rgba(0,0,0,.1); }
+
+.coll-card-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.coll-icon-wrap {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+.coll-method-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: #1a2540;
+  letter-spacing: .2px;
+}
+
+.coll-method-sub {
+  font-size: 11px;
+  color: #8a90a0;
+  font-weight: 500;
+  margin-top: 4px;
+}
+.coll-method-sub strong { color: #1a2540; font-weight: 700; }
+
+.coll-amount {
+  font-size: 17px;
+  font-weight: 800;
+  color: #1a2540;
+  letter-spacing: -.3px;
+  flex-shrink: 0;
+}
