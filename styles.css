@@ -47,6 +47,7 @@ body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 
 /* ══════════════════════════════
@@ -118,7 +119,7 @@ body {
    PHONE SHELL
 ══════════════════════════════ */
 
-.screens-wrapper { display:flex; transition:transform 0.4s cubic-bezier(0.4,0,0.2,1); width:300%; flex:1; min-height:0; overflow:hidden; }
+.screens-wrapper { display:flex; transition:transform 0.4s cubic-bezier(0.4,0,0.2,1); width:300%; flex:1; min-height:0; overflow:hidden; align-items:stretch; }
 .step-dots { display:flex; justify-content:center; gap:8px; padding:10px 0 8px; background:#f4f5f8; }
 .dot { width:8px; height:8px; border-radius:50%; background:#ccd0da; transition:all 0.3s; cursor:pointer; }
 .dot.active { background:#1a2540; width:22px; border-radius:4px; }
@@ -181,13 +182,13 @@ body {
 .odo-tab-lbl { font-size:10px; font-weight:500; margin-top:1px; opacity:.75; }
 .odo-search { margin:4px 12px 8px; background:white; border-radius:12px; padding:10px 14px; font-size:13px; color:#9aa0b0; box-shadow:0 1px 4px rgba(0,0,0,.06); display:flex; align-items:center; gap:8px; }
 
-.odo-list-wrap { position:relative; margin:0 12px 8px; }
+.odo-list-wrap { position:relative; margin:0 12px 12px; }
 .odo-list-wrap.locked .odo-list { filter:blur(3.5px); user-select:none; pointer-events:none; transition:filter .4s ease; }
 .odo-list-wrap.unlocked .odo-list { filter:none; transition:filter .4s ease; }
 .odo-blur-overlay { position:absolute; inset:0; border-radius:14px; background:rgba(26,37,64,.22); display:flex; align-items:center; justify-content:center; z-index:10; transition:opacity .35s ease; }
 .odo-blur-overlay.hidden { opacity:0; pointer-events:none; }
 .odo-lock-badge { display:flex; align-items:center; gap:8px; background:rgba(26,37,64,.82); backdrop-filter:blur(8px); color:white; font-size:12px; font-weight:600; padding:10px 16px; border-radius:30px; box-shadow:0 4px 16px rgba(0,0,0,.25); }
-.odo-list { background:white; border-radius:14px; overflow:hidden; box-shadow:0 1px 5px rgba(0,0,0,.07); }
+.odo-list { background:white; border-radius:14px; overflow:visible; box-shadow:0 1px 5px rgba(0,0,0,.07); }
 .odo-item { display:flex; align-items:center; gap:10px; padding:11px 12px; border-bottom:1px solid #f0f1f5; }
 .odo-num { width:22px; height:22px; border-radius:50%; background:#e8ecf4; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#5a6278; flex-shrink:0; }
 .odo-thumb { width:42px; height:36px; border-radius:8px; background:linear-gradient(135deg,#d0e4f7,#b8d4f0); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
@@ -604,3 +605,42 @@ body {
 }
 .fail-reason-lbl { flex: 1; font-size: 14px; font-weight: 700; color: #1a2540; }
 .fail-selected-tag { font-size: 12px; font-weight: 600; color: #4a7ad4; }
+
+/* ── Odometer screen scrollable layout ── */
+#screen-odo { display:flex; flex-direction:column; overflow:hidden; height:100%; }
+
+/* ── Odometer screen scrollable content wrapper ── */
+#screen-odo > div[style*="flex:1"] {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  min-height: 0;
+  flex: 1 1 0 !important;
+}
+
+/* ── Customer list: smooth scroll, show shadow hint ── */
+.odo-list-wrap {
+  scroll-behavior: smooth;
+  position: relative;
+  margin: 0 12px 12px;
+}
+
+/* Fade hint at bottom of list to indicate more content */
+.odo-list-wrap::after {
+  content: '';
+  display: block;
+  height: 18px;
+  background: linear-gradient(to bottom, transparent, rgba(244,245,248,.9));
+  position: sticky;
+  bottom: 0;
+  pointer-events: none;
+  border-radius: 0 0 14px 14px;
+  flex-shrink: 0;
+}
+
+/* ── Completed customer item style ── */
+.odo-item.completed {
+  background: white;
+}
+.odo-item.completed .odo-name {
+  color: #5a6278;
+}

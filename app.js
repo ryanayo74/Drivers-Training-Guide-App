@@ -178,13 +178,15 @@ const T = {
     endBadge: "Step 6 of 6 · End Delivery",
     endTitle: "End of Delivery Day",
     endSteps: [
-      "Once all deliveries are done, tap the <strong>Collections icon</strong> (💰 second icon at the bottom nav).",
-      "On the Collections screen, tap the <strong>⏱ Odometer icon</strong> at the top-right.",
-      "Take a <strong>photo of the final odometer</strong> reading from your truck dashboard.",
-      "Enter the <strong>final KM reading</strong> and tap <strong>\"Proceed\"</strong> — a success message will appear.",
-      "To logout: tap the <strong>⠿ More icon</strong> → tap <strong>\"Logout\"</strong>.",
+      "After all deliveries, check the <strong>status tabs</strong> (All / Pending / Success / Partial / Failed) to confirm every customer has been served.",
+      "Every transaction is summarized under the <strong>🏠 Home icon</strong> — review before proceeding.",
+      "Tap the <strong>💰 Collections icon</strong> (second icon at the bottom nav) to open the Collections screen.",
+      "On the Collections screen, tap the <strong>⏱ Odometer icon</strong> at the top-right to open the Final Odometer screen.",
+      "Tap the camera area to <strong>take a photo of the final odometer</strong> reading from your truck dashboard.",
+      "Enter the <strong>final KM reading</strong> and tap <strong>\"Proceed\"</strong> — a <em>\"Successfully uploaded odometer reading\"</em> message will appear. Tap <strong>Ok</strong>.",
+      "To logout: tap the <strong>⠿ More icon</strong> (bottom-right) → tap <strong>\"Logout\"</strong> to end your session.",
     ],
-    endNote: "Every transaction is summarized under the Home icon. Review before logging out.",
+    endNote: "Make sure your final odometer reading is logged BEFORE logging out. This cannot be undone.",
     endBtn:  "Complete — Ready to End Day ✓",
 
     /* lock / errors */
@@ -341,13 +343,15 @@ const T = {
     endBadge: "Hakbang 6 ng 6 · Tapusin ang Delivery",
     endTitle: "Katapusan ng Araw ng Delivery",
     endSteps: [
-      "Kapag tapos na ang lahat ng delivery, i-tap ang <strong>Collections icon</strong> (💰 ikalawang icon sa ibaba).",
-      "Sa Collections screen, i-tap ang <strong>⏱ Odometer icon</strong> sa kanang itaas.",
-      "Kumuha ng <strong>litrato ng huling odometer</strong> reading mula sa dashboard ng truck.",
-      "Ilagay ang <strong>huling KM reading</strong> at i-tap ang <strong>\"Ituloy\"</strong> — lalabas ang success message.",
-      "Para mag-logout: i-tap ang <strong>⠿ More icon</strong> → i-tap ang <strong>\"Logout\"</strong>.",
+      "Pagkatapos ng lahat ng delivery, suriin ang <strong>status tabs</strong> (All / Pending / Success / Partial / Failed) para makumpirma na nasilbihan ang bawat customer.",
+      "Nakita ang buod ng bawat transaksyon sa <strong>🏠 Home icon</strong> — suriin bago magpatuloy.",
+      "I-tap ang <strong>💰 Collections icon</strong> (ikalawang icon sa ibabang nav) para buksan ang Collections screen.",
+      "Sa Collections screen, i-tap ang <strong>⏱ Odometer icon</strong> sa kanang itaas para buksan ang Final Odometer screen.",
+      "I-tap ang camera area para <strong>kumuha ng litrato ng huling odometer</strong> reading mula sa dashboard ng truck.",
+      "Ilagay ang <strong>huling KM reading</strong> at i-tap ang <strong>\"Ituloy\"</strong> — lalabas ang mensaheng <em>\"Successfully uploaded odometer reading\"</em>. I-tap ang <strong>Ok</strong>.",
+      "Para mag-logout: i-tap ang <strong>⠿ More icon</strong> (ibabang-kanan) → i-tap ang <strong>\"Logout\"</strong> para tapusin ang session.",
     ],
-    endNote: "Nakita ang buod ng bawat transaksyon sa Home icon. Suriin bago mag-logout.",
+    endNote: "Siguraduhing naka-log ang iyong huling odometer reading BAGO mag-logout. Hindi na ito mababago.",
     endBtn:  "Tapos Na — Handa na para Tapusin ang Araw ✓",
 
     lockLabel:      "I-log ang odometer para i-unlock",
@@ -636,11 +640,57 @@ function showDeliveryFailedGuide() {
 }
 
 function showEndDeliveryGuide() {
-  createModal('endDelivModal', stepCard({
-    id:'endDelivModal', badge:t('endBadge'), badgeColor:'#475569', badgeLight:'#f1f5f9',
-    icon:'🏁', title:t('endTitle'), steps:t('endSteps'), note:t('endNote'),
-    btnLabel:t('endBtn'), btnAction:`dismissModal('endDelivModal')`
-  }));
+  const stepsHtml = t('endSteps').map((s,i) => `
+    <div class="guide-step-item">
+      <div class="guide-step-num" style="background:#475569;color:white;">${i+1}</div>
+      <div class="guide-step-text">${s}</div>
+    </div>`).join('');
+
+  // Visual flow strip showing the 3 stages (Image 1 → Image 2 → Image 3)
+  const flowHtml = `
+    <div style="display:flex;align-items:center;gap:6px;margin:14px 0 18px;overflow-x:auto;padding-bottom:4px;">
+      <!-- Stage 1: Customer Status -->
+      <div style="flex-shrink:0;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:10px 12px;text-align:center;min-width:88px;">
+        <div style="font-size:20px;margin-bottom:4px;">📋</div>
+        <div style="font-size:9px;font-weight:700;color:#475569;line-height:1.3;">Check<br>Status Tabs</div>
+        <div style="display:flex;justify-content:center;gap:2px;margin-top:6px;flex-wrap:wrap;">
+          <span style="font-size:7px;background:#22c55e;color:white;border-radius:3px;padding:1px 3px;font-weight:700;">✓</span>
+          <span style="font-size:7px;background:#f59e0b;color:white;border-radius:3px;padding:1px 3px;font-weight:700;">~</span>
+          <span style="font-size:7px;background:#ef4444;color:white;border-radius:3px;padding:1px 3px;font-weight:700;">✗</span>
+        </div>
+      </div>
+      <div style="font-size:14px;color:#94a3b8;flex-shrink:0;">→</div>
+      <!-- Stage 2: Collections + Odometer -->
+      <div style="flex-shrink:0;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:10px 12px;text-align:center;min-width:88px;">
+        <div style="font-size:20px;margin-bottom:4px;">💰</div>
+        <div style="font-size:9px;font-weight:700;color:#475569;line-height:1.3;">Collections<br>+ Final Odo</div>
+        <div style="margin-top:6px;font-size:8px;color:#64748b;background:#e2e8f0;border-radius:4px;padding:2px 4px;">⏱ Tap Odo Icon</div>
+      </div>
+      <div style="font-size:14px;color:#94a3b8;flex-shrink:0;">→</div>
+      <!-- Stage 3: Logout -->
+      <div style="flex-shrink:0;background:#fef2f2;border:1.5px solid #fecaca;border-radius:12px;padding:10px 12px;text-align:center;min-width:88px;">
+        <div style="font-size:20px;margin-bottom:4px;">🚪</div>
+        <div style="font-size:9px;font-weight:700;color:#dc2626;line-height:1.3;">More Icon<br>→ Logout</div>
+        <div style="margin-top:6px;font-size:8px;color:#dc2626;background:#fee2e2;border-radius:4px;padding:2px 4px;">⠿ More</div>
+      </div>
+    </div>`;
+
+  createModal('endDelivModal', `
+    <div class="guide-card">
+      <div class="guide-card-top" style="background:#f1f5f9;">
+        <div class="guide-step-label" style="color:#475569;">${t('endBadge')}</div>
+        <div class="guide-screen-icon">🏁</div>
+        <h2 class="guide-title" style="color:#475569;">${t('endTitle')}</h2>
+      </div>
+      <div class="guide-card-body">
+        ${flowHtml}
+        <div class="guide-steps-list">${stepsHtml}</div>
+        <div class="guide-note" style="border-left:3px solid #dc2626;background:#fef2f2;">
+          <span class="guide-note-icon">⚠️</span><span>${t('endNote')}</span>
+        </div>
+        <button class="guide-btn" style="background:#475569;" onclick="dismissModal('endDelivModal')">${t('endBtn')}</button>
+      </div>
+    </div>`);
 }
 
 /* ══════════════════════════════
@@ -785,19 +835,17 @@ window.customers = [
 window.custOutcomes = { 1: null, 2: null, 3: null, 4: null }; // null | 'success' | 'failed'
 
 function openCust(n) {
-  // Block if already completed
-  if (window.custOutcomes[n]) {
-    showToast('⚠️ This customer is already completed.');
-    return;
-  }
+  // Always allow clicking — just don't show guide again if already done
   window.activeCustomer = n;
   updateCustomerDetailText();
   openOverlay('customerDetailScreen');
-  // Customer 1 → Success guide; Customer 2 → Fail guide; 3+ → no modal
-  if (n === 1) {
-    setTimeout(() => showDeliverySuccessGuide(), 350);
-  } else if (n === 2) {
-    setTimeout(() => showDeliveryFailedGuide(), 350);
+  // Show guide only on FIRST visit
+  if (!window.custOutcomes[n]) {
+    if (n === 1) {
+      setTimeout(() => showDeliverySuccessGuide(), 350);
+    } else if (n === 2) {
+      setTimeout(() => showDeliveryFailedGuide(), 350);
+    }
   }
 }
 
@@ -847,7 +895,41 @@ function updateCustomerDetailText() {
   if (invBadge) {
     if (out === 'success') { invBadge.textContent = 'Delivered'; invBadge.style.color = '#22c55e'; invBadge.style.background = '#f0fdf4'; }
     else if (out === 'failed') { invBadge.textContent = 'Failed'; invBadge.style.color = '#e74c3c'; invBadge.style.background = '#fff0f0'; }
+    else if (out === 'partial') { invBadge.textContent = 'Partial'; invBadge.style.color = '#f59e0b'; invBadge.style.background = '#fffbeb'; }
     else { invBadge.textContent = 'Not visited'; invBadge.style.color = '#4a7ad4'; invBadge.style.background = '#f0f4ff'; }
+  }
+
+  // Show or hide the Proceed to invoice button
+  const proceedBtn = document.getElementById('custProceedBtn');
+  if (proceedBtn) {
+    if (out === 'success' || out === 'failed' || out === 'partial') {
+      // Already completed — hide Proceed, show a status card instead
+      proceedBtn.style.display = 'none';
+      // Show completion banner if not already there
+      let banner = document.getElementById('custCompletionBanner');
+      if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'custCompletionBanner';
+        banner.style.cssText = 'border-radius:12px;padding:14px 16px;margin-top:4px;display:flex;align-items:center;gap:12px;';
+        proceedBtn.parentNode.insertBefore(banner, proceedBtn.nextSibling);
+      }
+      const colors = {
+        success: { bg:'#f0fdf4', border:'#86efac', icon:'✅', color:'#15803d', label:'Delivery Successful', sub:'This delivery has been completed successfully.' },
+        failed:  { bg:'#fff0f0', border:'#fca5a5', icon:'❌', color:'#b91c1c', label:'Delivery Failed',     sub:'This delivery was marked as failed.' },
+        partial: { bg:'#fffbeb', border:'#fde68a', icon:'⚠️', color:'#b45309', label:'Partial Delivery',    sub:'Not all items were delivered.' },
+      };
+      const c = colors[out];
+      banner.style.background = c.bg;
+      banner.style.border = '1.5px solid ' + c.border;
+      banner.innerHTML = '<div style="font-size:22px;flex-shrink:0;">' + c.icon + '</div>' +
+        '<div><div style="font-size:13px;font-weight:700;color:' + c.color + ';">' + c.label + '</div>' +
+        '<div style="font-size:11px;color:#6a7090;margin-top:2px;">' + c.sub + '</div></div>';
+    } else {
+      // Not yet visited — show Proceed button, hide banner
+      proceedBtn.style.display = '';
+      const banner = document.getElementById('custCompletionBanner');
+      if (banner) banner.remove();
+    }
   }
 }
 
@@ -866,11 +948,11 @@ function updateListItemStatus(n, outcome) {
     if (statusEl) { statusEl.textContent = 'Partial'; statusEl.style.color = '#f59e0b'; }
     if (numEl)    numEl.style.background = '#f59e0b';
   }
-  // Lock the row
+  // Keep row clickable — just style it to show completion
   if (itemEl) {
-    itemEl.style.opacity = '0.5';
-    itemEl.style.pointerEvents = 'none';
-    itemEl.style.cursor = 'default';
+    itemEl.style.opacity = '1';
+    itemEl.style.pointerEvents = '';
+    itemEl.style.cursor = 'pointer';
   }
   // Update tabs
   const allOutcomes = Object.values(window.custOutcomes);
