@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Stackbox Delivery App</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- ══════════════════════════════
+     CANVA PRESENTATION INTRO
+     Shows fullscreen before the mobile simulator
+══════════════════════════════ -->
+<div id="canvaIntro" style="
+  position:fixed;inset:0;z-index:99999;
+  background:#0d1117;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  font-family:'DM Sans',sans-serif;
+  transition:opacity .5s ease;
+">
+
+  <!-- Canva iframe embed -->
+  <div style="
+    width:100%;max-width:960px;
+    aspect-ratio:16/9;
+    border-radius:16px;overflow:hidden;
+    box-shadow:0 24px 80px rgba(0,0,0,.6);
+    position:relative;
+    background:#1a2540;
+  ">
+    <!-- Canva public embed -->
+    <iframe
+      id="canvaFrame"
+      src="https://www.canva.com/design/DAGwt9fjMhc/H7A8Qxs__sVpL-B5LvCgTA/view?embed"
+      allowfullscreen
+      allow="fullscreen"
+      style="
+        width:100%;height:100%;border:none;
+        border-radius:16px;
+      "
+      loading="eager"
+    ></iframe>
+
+    <!-- Loading shimmer shown until iframe loads -->
+    <div id="canvaLoader" style="
+      position:absolute;inset:0;
+      background:linear-gradient(135deg,#1a2540,#2c3e6a);
+      display:flex;flex-direction:column;
+      align-items:center;justify-content:center;
+      gap:14px;border-radius:16px;
+      transition:opacity .4s ease;
+    ">
+      <!-- Stackbox logo -->
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="display:flex;align-items:flex-end;gap:2px;height:22px;">
+          <span style="display:block;width:4px;height:10px;background:white;border-radius:2px;"></span>
+          <span style="display:block;width:4px;height:16px;background:white;border-radius:2px;"></span>
+          <span style="display:block;width:4px;height:22px;background:white;border-radius:2px;"></span>
+          <span style="display:block;width:4px;height:14px;background:white;border-radius:2px;"></span>
+          <span style="display:block;width:4px;height:8px; background:white;border-radius:2px;"></span>
+        </div>
+        <span style="font-size:20px;font-weight:700;color:white;letter-spacing:-.5px;">Stackbox</span>
+      </div>
+      <div style="font-size:13px;color:rgba(255,255,255,.6);font-weight:500;letter-spacing:.3px;">Loading presentation…</div>
+      <!-- Animated dots -->
+      <div style="display:flex;gap:6px;" id="loadDots">
+        <div style="width:8px;height:8px;background:rgba(255,255,255,.3);border-radius:50%;animation:dotPulse 1.2s .0s ease infinite;"></div>
+        <div style="width:8px;height:8px;background:rgba(255,255,255,.3);border-radius:50%;animation:dotPulse 1.2s .2s ease infinite;"></div>
+        <div style="width:8px;height:8px;background:rgba(255,255,255,.3);border-radius:50%;animation:dotPulse 1.2s .4s ease infinite;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom controls -->
+  <div style="
+    display:flex;align-items:center;gap:14px;
+    margin-top:20px;flex-wrap:wrap;justify-content:center;
+  ">
+    <a href="https://www.canva.com/design/DAGwt9fjMhc/H7A8Qxs__sVpL-B5LvCgTA/view"
+       target="_blank"
+       style="
+         display:flex;align-items:center;gap:7px;
+         padding:10px 18px;border-radius:10px;
+         background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.2);
+         color:white;font-size:13px;font-weight:600;text-decoration:none;
+         transition:all .15s;
+       "
+       onmouseover="this.style.background='rgba(255,255,255,.18)'"
+       onmouseout="this.style.background='rgba(255,255,255,.1)'"
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      Open in Canva
+    </a>
+
+    <button onclick="closeCanvaIntro()" style="
+      padding:10px 28px;border-radius:10px;
+      background:#1a2540;border:none;
+      color:white;font-size:14px;font-weight:700;
+      cursor:pointer;font-family:'DM Sans',sans-serif;
+      box-shadow:0 4px 16px rgba(26,37,64,.4);
+      display:flex;align-items:center;gap:8px;
+      transition:all .15s;
+    "
+    onmouseover="this.style.background='#243058'"
+    onmouseout="this.style.background='#1a2540'"
+    >
+      Start Training App
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+
+  <div style="margin-top:12px;font-size:11px;color:rgba(255,255,255,.35);font-weight:500;">
+    Press <kbd style="background:rgba(255,255,255,.12);padding:2px 6px;border-radius:4px;font-size:10px;">Esc</kbd> to skip
+  </div>
+</div>
+
+<style>
+@keyframes dotPulse {
+  0%,100%{opacity:.3;transform:scale(1)}
+  50%{opacity:1;transform:scale(1.3)}
+}
+#canvaIntro.closing {
+  opacity:0;pointer-events:none;
+}
+</style>
+
+
+<!-- ══════════════════════════════
+     PHONE SHELL
+══════════════════════════════ -->
+<div class="phone-shell">
+
+  <!-- Step dots -->
+  <div class="step-dots">
+    <div class="dot active" id="dot0"></div>
+    <div class="dot" id="dot1"></div>
+    <div class="dot" id="dot2"></div>
+  </div>
+
+  <div style="overflow:hidden;">
+    <div class="screens-wrapper" id="slider">
+
+      <!-- ══════════════ SCREEN 1 · LOGIN ══════════════ -->
+      <div class="screen">
+        <div class="status-bar plain">
+          <span>11:02</span>
+          <div class="status-icons">
+            📍 📶
+            <span style="font-weight:700;font-size:10px;background:#1a2540;color:white;padding:1px 5px;border-radius:3px;">4G</span>
+            🔋
+          </div>
+        </div>
+        <div class="login-hero">
+          <div class="login-logo">
+            <div class="logo-bars"><span></span><span></span><span></span><span></span><span></span></div>
+            <span class="logo-name">Stackbox</span>
+          </div>
+          <div class="welcome-text">Welcome to</div>
+          <div class="app-name">Delivery App</div>
+          <div class="login-sub">Please Login to continue</div>
+        </div>
+        <div class="login-form-area">
+          <div class="field-group">
+            <div class="field-label">Mobile number or username</div>
+            <input id="screenUsername" class="screen-field-input" type="text" placeholder="Enter username" autocomplete="username" autocapitalize="none" spellcheck="false"/>
+          </div>
+          <div class="field-group">
+            <div class="field-label">Password</div>
+            <div class="field-row">
+              <input id="screenPassword" class="screen-field-input" type="password" placeholder="Enter password" autocomplete="current-password" style="flex:1;"/>
+              <span class="eye-icon" id="screenEye">👁</span>
+            </div>
+          </div>
+          <div class="screen-error" id="screenError"></div>
+          <div class="client-row">
+            <span style="font-size:20px;">⊞</span>
+            Client : <span class="client-code">SBX</span>
+          </div>
+          <button class="login-btn" id="screenLoginBtn" type="button">Login</button>
+          <div class="version-info">v60.0.19<br>OTA : 260426:235803</div>
+        </div>
+        <div class="home-indicator" style="background:white;"><div class="home-bar"></div></div>
+      </div>
+
+      <!-- ══════════════ SCREEN 2 · ODOMETER / HOME ══════════════ -->
+      <div class="screen" id="screen-odo">
+
+        <!-- Swipe handle -->
+        <div class="qs-swipe-handle" id="qsHandle" onclick="openQsShade()">
+          <div class="qs-swipe-handle-bar"></div>
+          <span class="qs-swipe-hint" id="qsHintText">↑ Pull down for Location</span>
+          <div class="qs-swipe-handle-bar"></div>
+        </div>
+
+        <!-- Status bar -->
+        <div class="status-bar light" style="padding:10px 18px 8px;">
+          <span style="font-weight:600;font-size:12px;">11:02</span>
+          <div style="display:flex;align-items:center;gap:5px;">
+            <span id="locDot" style="font-size:11px;">📍</span>
+            <svg width="15" height="11" viewBox="0 0 15 11"><rect x="0" y="6" width="3" height="5" rx="1" fill="#1a2540"/><rect x="4" y="3.5" width="3" height="7.5" rx="1" fill="#1a2540"/><rect x="8" y="1" width="3" height="10" rx="1" fill="#1a2540"/><rect x="12" y="0" width="3" height="11" rx="1" fill="#d0d0d0"/></svg>
+            <span style="background:#1a2540;color:white;font-size:9px;font-weight:800;padding:1px 4px;border-radius:3px;">4G</span>
+            <svg width="22" height="11" viewBox="0 0 22 11"><rect x="0" y="0.5" width="18" height="10" rx="2" stroke="#1a2540" stroke-width="1.5" fill="none"/><rect x="1.5" y="2" width="11" height="7" rx="1" fill="#4cd964"/><rect x="19" y="3.5" width="3" height="4" rx="1" fill="#1a2540"/></svg>
+          </div>
+        </div>
+
+        <!-- Header -->
+        <div class="odo-header">
+          <div>
+            <div class="odo-greeting">Hello</div>
+            <div class="odo-company">EASTERN SERVICES<br>TRANSPORTATION!</div>
+          </div>
+          <button class="odo-clock-btn" id="odoBtn" onclick="handleOdoClick()" title="Log Odometer">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a2540" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Route card -->
+        <div class="odo-route">
+          <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#e8f0fe,#dbeafe);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#5a6faa" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </div>
+          <div class="odo-route-info" style="flex:1;">
+            <div class="odo-date">Fri, 8 May 2026</div>
+            <div class="odo-code">V3(CBN.4675)-(2026-05-05)-(Jentec Naga)</div>
+          </div>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9aa0b0" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.18-5.5"/></svg>
+        </div>
+
+        <!-- Tabs -->
+        <div class="odo-tabs">
+          <div class="odo-tab active">4<div class="odo-tab-lbl">All</div></div>
+          <div class="odo-tab" id="tabPending">4<div class="odo-tab-lbl">Pending</div></div>
+          <div class="odo-tab" id="tabSuccess">0<div class="odo-tab-lbl">Success</div></div>
+          <div class="odo-tab" id="tabPartial">0<div class="odo-tab-lbl">Partial</div></div>
+          <div class="odo-tab" id="tabFailed" style="color:#e74c3c;">0<div class="odo-tab-lbl">Failed</div></div>
+        </div>
+
+        <!-- Search -->
+        <div class="odo-search">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9aa0b0" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Search retailers
+        </div>
+
+        <!-- Customer list — blurred until odometer logged -->
+        <div class="odo-list-wrap locked" id="odoListWrap">
+          <div class="odo-blur-overlay" id="odoBlurOverlay">
+            <div class="odo-lock-badge">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <span id="lockBadgeSpan">Log odometer to unlock</span>
+            </div>
+          </div>
+          <div class="odo-list">
+
+            <!-- Customer 1 — Not visited (will become Success after delivery) -->
+            <div class="odo-item" id="custItem1" onclick="if(window.odoLogged){openCust(1);}else{showOdometerModal(true);}">
+              <div class="odo-num" style="background:#4a7ad4;" id="custNum1">1</div>
+              <div class="odo-thumb">
+                <svg width="54" height="54" viewBox="0 0 80 80" fill="none">
+                  <rect width="80" height="80" rx="10" fill="#e8f0fb"/>
+                  <rect x="15" y="28" width="50" height="36" rx="3" fill="#60a5fa"/>
+                  <rect x="15" y="20" width="50" height="12" rx="3" fill="#3b82f6"/>
+                  <rect x="32" y="44" width="16" height="20" rx="2" fill="#1e40af"/>
+                  <rect x="18" y="32" width="10" height="8" rx="1" fill="#bfdbfe"/>
+                  <rect x="52" y="32" width="10" height="8" rx="1" fill="#bfdbfe"/>
+                  <circle cx="52" cy="42" r="7" fill="#fbbf24"/>
+                  <ellipse cx="52" cy="58" rx="7" ry="6" fill="#f59e0b"/>
+                  <rect x="20" y="46" width="10" height="8" rx="2" fill="#34d399"/>
+                  <path d="M19 46 Q24 40 29 46" stroke="#10b981" stroke-width="1.5" fill="none"/>
+                </svg>
+              </div>
+              <div style="flex:1;min-width:0;">
+                <div class="odo-not-visited" id="custStatus1">Not visited</div>
+                <div class="odo-name">VS NORTH ALBAY – A. BOSOTROS</div>
+                <div class="odo-code-text">5239_STO</div>
+                <div class="odo-addr">DIVERSION ROAD DUTERTE HIGHWAY DARAGA ALBAY</div>
+              </div>
+            </div>
+
+            <!-- Customer 2 -->
+            <div class="odo-item" id="custItem2" onclick="if(window.odoLogged){openCust(2);}else{showOdometerModal(true);}">
+              <div class="odo-num" style="background:#4a7ad4;" id="custNum2">2</div>
+              <div class="odo-thumb">
+                <svg width="54" height="54" viewBox="0 0 80 80" fill="none">
+                  <rect width="80" height="80" rx="10" fill="#fef3c7"/>
+                  <rect x="15" y="28" width="50" height="36" rx="3" fill="#fbbf24"/>
+                  <rect x="15" y="20" width="50" height="12" rx="3" fill="#f59e0b"/>
+                  <rect x="32" y="44" width="16" height="20" rx="2" fill="#b45309"/>
+                  <rect x="18" y="32" width="10" height="8" rx="1" fill="#fde68a"/>
+                  <rect x="52" y="32" width="10" height="8" rx="1" fill="#fde68a"/>
+                  <circle cx="28" cy="42" r="7" fill="#fb923c"/>
+                  <ellipse cx="28" cy="58" rx="7" ry="6" fill="#ea580c"/>
+                  <rect x="50" y="46" width="10" height="8" rx="2" fill="#818cf8"/>
+                  <path d="M49 46 Q54 40 59 46" stroke="#6366f1" stroke-width="1.5" fill="none"/>
+                </svg>
+              </div>
+              <div style="flex:1;min-width:0;">
+                <div class="odo-not-visited" id="custStatus2">Not visited</div>
+                <div class="odo-name">VS WEST ALBAY – I. DOROMAL LIGAO</div>
+                <div class="odo-code-text">5240_LIGAO</div>
+                <div class="odo-addr">LIGAO CITY ALBAY</div>
+              </div>
+            </div>
+
+            <!-- Customer 3 -->
+            <div class="odo-item" id="custItem3" onclick="if(window.odoLogged){openCust(3);}else{showOdometerModal(true);}">
+              <div class="odo-num" style="background:#4a7ad4;" id="custNum3">3</div>
+              <div class="odo-thumb">
+                <svg width="54" height="54" viewBox="0 0 80 80" fill="none">
+                  <rect width="80" height="80" rx="10" fill="#dcfce7"/>
+                  <rect x="15" y="28" width="50" height="36" rx="3" fill="#34d399"/>
+                  <rect x="15" y="20" width="50" height="12" rx="3" fill="#10b981"/>
+                  <rect x="32" y="44" width="16" height="20" rx="2" fill="#065f46"/>
+                  <rect x="18" y="32" width="10" height="8" rx="1" fill="#a7f3d0"/>
+                  <rect x="52" y="32" width="10" height="8" rx="1" fill="#a7f3d0"/>
+                  <circle cx="52" cy="42" r="7" fill="#f472b6"/>
+                  <ellipse cx="52" cy="58" rx="7" ry="6" fill="#ec4899"/>
+                  <rect x="18" y="46" width="10" height="8" rx="2" fill="#60a5fa"/>
+                  <path d="M17 46 Q22 40 27 46" stroke="#3b82f6" stroke-width="1.5" fill="none"/>
+                </svg>
+              </div>
+              <div style="flex:1;min-width:0;">
+                <div class="odo-not-visited" id="custStatus3">Not visited</div>
+                <div class="odo-name">VS SOUTH ALBAY – R. ILUSTRE</div>
+                <div class="odo-code-text">5241_LEGAZPI</div>
+                <div class="odo-addr">QUEZON AVE LEGAZPI CITY ALBAY</div>
+              </div>
+            </div>
+
+            <!-- Customer 4 -->
+            <div class="odo-item" id="custItem4" style="border-bottom:none;" onclick="if(window.odoLogged){openCust(4);}else{showOdometerModal(true);}">
+              <div class="odo-num" style="background:#4a7ad4;" id="custNum4">4</div>
+              <div class="odo-thumb">
+                <svg width="54" height="54" viewBox="0 0 80 80" fill="none">
+                  <rect width="80" height="80" rx="10" fill="#ede9fe"/>
+                  <rect x="15" y="28" width="50" height="36" rx="3" fill="#a78bfa"/>
+                  <rect x="15" y="20" width="50" height="12" rx="3" fill="#7c3aed"/>
+                  <rect x="32" y="44" width="16" height="20" rx="2" fill="#4c1d95"/>
+                  <rect x="18" y="32" width="10" height="8" rx="1" fill="#ddd6fe"/>
+                  <rect x="52" y="32" width="10" height="8" rx="1" fill="#ddd6fe"/>
+                  <circle cx="28" cy="42" r="7" fill="#fbbf24"/>
+                  <ellipse cx="28" cy="58" rx="7" ry="6" fill="#f59e0b"/>
+                  <rect x="50" y="46" width="10" height="8" rx="2" fill="#f87171"/>
+                  <path d="M49 46 Q54 40 59 46" stroke="#ef4444" stroke-width="1.5" fill="none"/>
+                </svg>
+              </div>
+              <div style="flex:1;min-width:0;">
+                <div class="odo-not-visited" id="custStatus4">Not visited</div>
+                <div class="odo-name">PHILIPPINE SEVEN CORPORATION</div>
+                <div class="odo-code-text">123373</div>
+                <div class="odo-addr">ZONE 1 BRGY CAROYROYAN PILI CAMARINES SUR</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Bottom nav -->
+        <div class="odo-bottom-nav">
+          <div class="odo-nav-item">
+            <div class="odo-home-pill"><span class="odo-nav-icon">🏠</span><span class="odo-nav-lbl">Home</span></div>
+          </div>
+          <div class="odo-nav-item" onclick="showDeliverySuccessGuide()" title="Delivery Guide">
+            <span style="font-size:22px;">💰</span>
+            <span style="font-size:9px;color:#9aa0b0;font-weight:600;">Collections</span>
+          </div>
+          <div class="odo-nav-item" onclick="showDeliveryFailedGuide()" title="Failed Delivery Guide" style="cursor:pointer;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9aa0b0" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="7" height="9" rx="1"/><rect x="2" y="14" width="7" height="7" rx="1"/><rect x="11" y="3" width="7" height="4" rx="1"/><rect x="11" y="9" width="7" height="12" rx="1"/></svg>
+            <span style="font-size:9px;color:#9aa0b0;font-weight:600;">Reports</span>
+          </div>
+          <div class="odo-nav-item" onclick="showEndDeliveryGuide()" title="End of Day Guide" style="cursor:pointer;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#9aa0b0"><circle cx="5" cy="5" r="2"/><circle cx="12" cy="5" r="2"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="12" cy="19" r="2"/><circle cx="19" cy="19" r="2"/></svg>
+            <span style="font-size:9px;color:#9aa0b0;font-weight:600;">More</span>
+          </div>
+        </div>
+        <div class="android-nav" style="background:#f8f8f8;">
+          <span style="font-size:16px;letter-spacing:1px;">|||</span>
+          <span style="font-size:20px;">○</span>
+          <span style="font-size:18px;">‹</span>
+        </div>
+      </div>
+
+      <!-- ══════════════ SCREEN 3 · PAYMENT ══════════════ -->
+      <div class="screen">
+        <div class="status-bar light">
+          <span>6:26</span>
+          <div class="status-icons"><span>●●●</span><span>WiFi</span><span>🔋</span></div>
+        </div>
+        <div class="top-nav">
+          <button class="back-btn" onclick="goTo(1)">‹</button>
+          <span class="nav-title">Payment details</span>
+        </div>
+        <div class="scroll-area">
+          <div class="delivery-badge"><span class="badge-text" id="successDelivLbl">Full Delivery</span></div>
+          <div class="summary-row">
+            <div class="summary-card"><div class="summary-label">Amount</div><div class="summary-value">₱ 40</div></div>
+            <div class="summary-card"><div class="summary-label">Collected</div><div class="summary-value">₱ 0</div></div>
+          </div>
+          <div class="section-card">
+            <div class="section-title">Mode of payments</div>
+            <div class="payment-method open" id="otherMethod">
+              <div class="method-header" onclick="toggleMethod('otherMethod')">
+                <div class="method-left"><div class="method-icon">🏷️</div><span class="method-name">Other Charges</span></div>
+                <span class="chevron">▲</span>
+              </div>
+              <div class="method-body">
+                <div class="charges-select-wrapper">
+                  <div class="charges-label">Charge Type</div>
+                  <select class="charges-select">
+                    <option value="">Select charge type…</option>
+                    <option>Service Fee</option><option>Delivery Fee</option>
+                    <option>Handling Fee</option><option>Surcharge</option>
+                    <option>Tax</option><option>Discount</option><option>Other</option>
+                  </select>
+                  <span class="select-arrow">▾</span>
+                </div>
+                <div class="amount-input-row">
+                  <span class="currency-sym">₱</span>
+                  <input class="amount-input" id="chargeInput" type="number" value="0" min="0" step="0.01"/>
+                  <button class="clear-btn" onclick="clearAmount()">✕</button>
+                </div>
+                <button class="add-note-btn">＋ Add note</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-area"><button class="proceed-btn">Proceed</button></div>
+        <div class="home-indicator"><div class="home-bar"></div></div>
+      </div>
+
+    </div>
+  </div>
+  <!-- Floating Canva editor button -->
+  <div style="position:absolute;bottom:52px;right:-60px;z-index:600;">
+    <a href="canva.html" target="_blank"
+       style="display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;
+              background:white;border-radius:14px;padding:10px 12px;
+              box-shadow:0 6px 20px rgba(26,37,64,.2);border:1.5px solid #e4e7f0;
+              transition:all .2s;font-family:'DM Sans',sans-serif;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1a2540" stroke-width="2" stroke-linecap="round">
+        <rect x="3" y="3" width="18" height="18" rx="3"/>
+        <line x1="3" y1="9" x2="21" y2="9"/>
+        <line x1="9" y1="21" x2="9" y2="9"/>
+      </svg>
+      <span style="font-size:9px;font-weight:700;color:#1a2540;letter-spacing:.3px;">SLIDES</span>
+    </a>
+  </div>
+
+<!-- QS SHADE — Location only -->
+<div class="qs-shade" id="qsShade">
+  <div class="qs-shade-bar">
+    <span style="font-weight:700;font-size:12px;color:white;">GLOBE</span>
+    <div style="display:flex;align-items:center;gap:5px;">
+      <span style="font-size:13px;">⏰</span>
+      <span style="font-size:13px;">📍</span>
+      <svg width="15" height="11" viewBox="0 0 15 11"><rect x="0" y="6" width="3" height="5" rx="1" fill="white"/><rect x="4" y="3.5" width="3" height="7.5" rx="1" fill="white"/><rect x="8" y="1" width="3" height="10" rx="1" fill="white"/><rect x="12" y="0" width="3" height="11" rx="1" fill="rgba(255,255,255,0.4)"/></svg>
+      <span style="background:white;color:#333;font-size:9px;font-weight:800;padding:1px 4px;border-radius:3px;">4G</span>
+      <svg width="22" height="11" viewBox="0 0 22 11"><rect x="0" y="0.5" width="18" height="10" rx="2" stroke="white" stroke-width="1.5" fill="none"/><rect x="1.5" y="2" width="13" height="7" rx="1" fill="white"/><rect x="19" y="3.5" width="3" height="4" rx="1" fill="white"/></svg>
+    </div>
+  </div>
+  <div class="qs-shade-actions">
+    <span class="qs-act-icon">✏️</span><span class="qs-act-icon">⏻</span><span class="qs-act-icon">⚙️</span>
+    <button onclick="cycleLang()" style="background:rgba(255,255,255,.15);border:none;border-radius:16px;padding:5px 11px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;color:white;cursor:pointer;" id="qsLangBtn">🌐 EN</button>
+  </div>
+
+  <!-- Location focus section -->
+  <div class="qs-loc-section">
+    <div class="qs-loc-label">Location</div>
+    <div class="qs-loc-toggle-row">
+      <div class="qs-loc-info">
+        <div class="qs-loc-title" id="qsLocTitle">Location is OFF</div>
+        <div class="qs-loc-sub" id="qsLocSub">Tap the toggle to enable GPS</div>
+      </div>
+      <!-- Big location toggle -->
+      <div class="qs-loc-toggle" id="qsLocToggle" onclick="toggleLocation()">
+        <div class="qs-loc-icon" id="qsLocIcon">📍</div>
+        <div class="qs-loc-state" id="qsLocState">OFF</div>
+      </div>
+    </div>
+
+    <!-- Visual grid showing only loc icon highlighted -->
+    <div class="qs-mini-grid">
+      <div class="qs-circle" style="background:#4a5060;font-size:16px;">🔒</div>
+      <div class="qs-circle" style="background:#4a5060;font-size:16px;">✈️</div>
+      <div class="qs-circle" style="background:#4a5060;font-size:16px;">🔕</div>
+      <div class="qs-circle" style="background:#4a5060;font-size:16px;">📡</div>
+      <div class="qs-circle" id="qsLocCircle" onclick="toggleLocation()" style="font-size:16px;">📍</div>
+      <div class="qs-circle" style="background:#4a5060;font-size:16px;">🔄</div>
+    </div>
+
+    <!-- Status pill -->
+    <div class="qs-loc-status-pill" id="qsLocStatusPill">
+      <span id="qsLocStatusIcon">⚠️</span>
+      <span id="qsLocStatusText">Location must be ON to continue</span>
+    </div>
+  </div>
+
+  <!-- Sliders (kept for realism) -->
+  <div class="qs-sliders" style="padding:4px 14px 6px;">
+    <div class="qs-slider-row">
+      <span style="font-size:18px;">☀️</span>
+      <div class="qs-track" style="background:#5a6070;"><div class="qs-fill" style="width:18%;background:white;"></div></div>
+      <div class="qs-moon">🌙</div>
+    </div>
+    <div class="qs-slider-row">
+      <span style="font-size:16px;">🎵</span>
+      <div class="qs-track" style="background:#5a6070;"><div class="qs-fill" style="width:6%;background:white;"></div></div>
+      <div class="qs-moon" style="font-size:14px;">🔈</div>
+    </div>
+  </div>
+
+  <!-- Continue button -->
+  <div style="padding:10px 14px 14px;background:#5a6070;">
+    <button id="qsContinueBtn" onclick="confirmLocation()" style="width:100%;padding:15px;background:#666e80;border:none;border-radius:14px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;color:rgba(255,255,255,0.5);cursor:not-allowed;transition:all 0.3s;">
+      Turn on Location to Continue
+    </button>
+  </div>
+
+  <div class="android-nav" style="background:#5a6070;border-top:1px solid rgba(255,255,255,0.1);">
+    <span style="color:rgba(255,255,255,0.8);font-size:16px;">|||</span>
+    <span style="color:rgba(255,255,255,0.8);font-size:18px;">○</span>
+    <span style="color:rgba(255,255,255,0.8);font-size:18px;">‹</span>
+  </div>
+</div><!-- /qs-shade -->
+
+
+<!-- ══════════════════════════════
+     ODOMETER READING OVERLAY  (Image 1)
+     Full-screen white panel, slides up
+══════════════════════════════ -->
+<div class="fs-overlay" id="odoReadingScreen" style="display:none;">
+  <div class="fs-panel">
+    <!-- top bar -->
+    <div class="fs-topbar">
+      <button class="fs-back" onclick="closeOverlay('odoReadingScreen')">‹</button>
+      <span class="fs-title">Odometer Reading</span>
+    </div>
+
+    <div class="fs-body">
+      <div class="fs-section-label" id="odoScreenLabel">Initial Odometer Reading</div>
+
+      <!-- Photo upload box -->
+      <div class="odo-cam-box" id="odoCamBox" onclick="document.getElementById('odoCamInput').click()">
+        <input type="file" id="odoCamInput" accept="image/*" capture="environment" style="display:none;" onchange="handleOdoCamImage(event)"/>
+        <div class="odo-cam-placeholder" id="odoCamPlaceholder">
+          <div class="odo-cam-icon">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.8" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </div>
+        </div>
+        <img id="odoCamPreview" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:10px;" alt="odometer"/>
+        <!-- side action icons -->
+        <div class="odo-cam-actions">
+          <div class="odo-cam-action-btn green">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+          </div>
+          <div class="odo-cam-action-btn green">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          </div>
+          <div class="odo-cam-action-btn green">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- KM input -->
+      <div class="odo-km-row">
+        <input id="odoCamKm" class="odo-km-input" type="number" placeholder="Enter odometer reading (start)" id="odoCamKm" min="0"/>
+        <span class="odo-km-unit">KM</span>
+      </div>
+
+      <div id="odoCamErr" style="display:none;font-size:11px;color:#e74c3c;font-weight:600;text-align:center;margin-bottom:8px;"></div>
+    </div>
+
+    <!-- Proceed button -->
+    <div class="fs-footer">
+      <button class="fs-proceed-btn" id="odoScreenProceed" onclick="submitOdoCam()">Proceed</button>
+    </div>
+
+    <!-- Android nav -->
+    <div class="android-nav" style="background:white;border-top:1px solid #eee;">
+      <span style="font-size:16px;color:#555;">|||</span>
+      <span style="font-size:18px;color:#555;">○</span>
+      <span style="font-size:18px;color:#555;">‹</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     CUSTOMER DETAIL OVERLAY  (Image 2)
+     Shows customer info + Proceed to Invoice
+══════════════════════════════ -->
+<div class="fs-overlay" id="customerDetailScreen" style="display:none;">
+  <div class="fs-panel" style="padding:0;overflow-y:auto;">
+
+    <!-- Large hero illustration (full-width, no topbar) -->
+    <div class="cust-hero-full">
+      <svg width="100%" height="180" viewBox="0 0 360 180" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+        <!-- Sky background -->
+        <rect width="360" height="180" fill="#dbeafe"/>
+        <!-- Floor -->
+        <rect x="0" y="130" width="360" height="50" fill="#bfdbfe"/>
+        <!-- Shopping cart left -->
+        <rect x="30" y="95" width="55" height="38" rx="4" fill="#93c5fd" opacity="0.5"/>
+        <rect x="34" y="99" width="47" height="30" rx="3" fill="#bfdbfe"/>
+        <circle cx="40" cy="137" r="5" fill="#60a5fa"/>
+        <circle cx="78" cy="137" r="5" fill="#60a5fa"/>
+        <line x1="30" y1="95" x2="22" y2="80" stroke="#60a5fa" stroke-width="3" stroke-linecap="round"/>
+        <!-- Person 1 (left, orange) -->
+        <circle cx="80" cy="68" r="18" fill="#fbbf24"/>
+        <path d="M48 150 Q48 108 80 108 Q96 108 96 108 Q96 108 112 108 Q112 150 112 150" fill="#f59e0b" opacity="0.85"/>
+        <!-- Shirt details person 1 -->
+        <rect x="68" y="108" width="24" height="28" rx="3" fill="#34d399" opacity="0.8"/>
+        <!-- Bag person 1 -->
+        <rect x="56" y="116" width="14" height="20" rx="4" fill="#10b981"/>
+        <rect x="58" y="113" width="10" height="5" rx="2" fill="#059669"/>
+        <!-- Counter / checkout desk -->
+        <rect x="120" y="85" width="120" height="65" rx="8" fill="#93c5fd"/>
+        <rect x="120" y="72" width="120" height="18" rx="5" fill="#60a5fa"/>
+        <!-- Screen on counter -->
+        <rect x="145" y="56" width="50" height="32" rx="4" fill="#1e40af"/>
+        <rect x="148" y="59" width="44" height="22" rx="2" fill="#3b82f6"/>
+        <rect x="163" y="85" width="14" height="6" rx="1" fill="#2563eb"/>
+        <!-- Items on counter -->
+        <rect x="130" y="74" width="16" height="10" rx="2" fill="#fde68a"/>
+        <rect x="152" y="72" width="12" height="12" rx="2" fill="#bbf7d0"/>
+        <rect x="170" y="75" width="10" height="9" rx="2" fill="#fca5a5"/>
+        <rect x="186" y="73" width="14" height="11" rx="2" fill="#c4b5fd"/>
+        <!-- Person 2 (right, staff in red hat) -->
+        <circle cx="275" cy="68" r="18" fill="#818cf8"/>
+        <!-- Red hat -->
+        <ellipse cx="275" cy="51" rx="18" ry="5" fill="#ef4444"/>
+        <rect x="265" y="46" width="20" height="7" rx="3" fill="#dc2626"/>
+        <path d="M255 150 Q255 108 275 108 Q291 108 291 108 Q291 108 305 108 Q305 150 305 150" fill="#6366f1" opacity="0.85"/>
+        <!-- Staff shirt -->
+        <rect x="263" y="108" width="24" height="28" rx="3" fill="#ef4444" opacity="0.8"/>
+        <!-- Green basket items on right -->
+        <rect x="308" y="100" width="18" height="24" rx="4" fill="#34d399"/>
+        <rect x="310" y="97" width="14" height="5" rx="2" fill="#10b981"/>
+        <circle cx="312" cy="127" r="4" fill="#059669"/>
+        <circle cx="322" cy="127" r="4" fill="#059669"/>
+      </svg>
+      <!-- Back button overlaid -->
+      <button onclick="closeOverlay('customerDetailScreen')" style="position:absolute;top:12px;left:12px;width:34px;height:34px;background:rgba(255,255,255,0.85);border:none;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.12);">‹</button>
+    </div>
+
+    <div class="cust-info-area" style="padding:0 0 80px;">
+
+      <!-- Name + status row -->
+      <div style="padding:14px 16px 10px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+          <div style="flex:1;">
+            <div style="font-size:19px;font-weight:800;color:#1a2540;line-height:1.25;">VS NORTH ALBAY<br>– A. BOSOTROS</div>
+            <div style="font-size:12px;color:#6a7090;margin-top:4px;">5239_STO</div>
+            <div style="font-size:11px;color:#9aa0b0;margin-top:2px;">DIVERSION ROAD DUTERTE HIGHWAY DARAGA ALBAY</div>
+          </div>
+          <div style="flex-shrink:0;display:flex;align-items:center;gap:6px;background:#f0f4ff;border:1.5px solid #d0d8f0;border-radius:20px;padding:5px 10px;">
+            <div style="width:10px;height:10px;background:#4a7ad4;border-radius:50%;"></div>
+            <span style="font-size:11px;font-weight:700;color:#1a2540;" id="custNotVisitedBadge">Not visited</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4 action buttons -->
+      <div class="cust-action-row" style="padding:6px 16px 14px;">
+        <div class="cust-action-item">
+          <div class="cust-action-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5a6278" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.35 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 9a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          </div>
+          <span class="cust-action-lbl" id="custCallLbl">Call</span>
+        </div>
+        <div class="cust-action-item">
+          <div class="cust-action-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5a6278" stroke-width="2" stroke-linecap="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+          </div>
+          <span class="cust-action-lbl" id="custDirLbl">Directions</span>
+        </div>
+        <div class="cust-action-item">
+          <div class="cust-action-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5a6278" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <span class="cust-action-lbl" id="custTimeLbl">Timings</span>
+        </div>
+        <div class="cust-action-item">
+          <div class="cust-action-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5a6278" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </div>
+          <span class="cust-action-lbl" id="custGeoLbl">Geotag</span>
+        </div>
+      </div>
+
+      <!-- Divider -->
+      <div style="height:8px;background:#f0f2f6;"></div>
+
+      <!-- Delivery section -->
+      <div style="padding:0 16px;">
+        <div style="font-size:14px;font-weight:700;color:#1a2540;padding:14px 0 12px;text-align:center;" id="custDeliveryHeader">Delivery</div>
+
+        <!-- Invoice card — matching Image 2 exactly -->
+        <div style="background:white;border:1.5px solid #e8eaf0;border-radius:14px;padding:14px 16px;box-shadow:0 2px 8px rgba(0,0,0,.06);">
+          <!-- Invoice number + status -->
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="font-size:14px;font-weight:800;color:#1a2540;">11370497</span>
+            <span style="background:#f0f4ff;border:1.5px solid #d0d8f0;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:#4a7ad4;">Not visited</span>
+          </div>
+          <!-- Salesman row -->
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:14px;background:#f8f9fc;border-radius:8px;padding:7px 10px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1a2540" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07"/><path d="M1 1l22 22"/></svg>
+            <span style="font-size:12px;color:#1a2540;font-weight:600;" id="custSalesmanLbl">JENTEC NAGA-ALL (ALL)</span>
+          </div>
+          <!-- Amount + Collected -->
+          <div style="display:flex;justify-content:space-between;margin-bottom:16px;">
+            <div>
+              <div style="font-size:11px;color:#9aa0b0;margin-bottom:3px;" id="custAmountLbl">Amount</div>
+              <div style="font-size:16px;font-weight:800;color:#1a2540;">₱9</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:11px;color:#9aa0b0;margin-bottom:3px;" id="custCollectedLbl">Collected</div>
+              <div style="font-size:16px;font-weight:700;color:#9aa0b0;">-</div>
+            </div>
+          </div>
+          <!-- Proceed button -->
+          <button class="cust-proceed-btn" id="custProceedBtn" onclick="openDeliveryScreen()">Proceed to invoice</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="android-nav" style="position:sticky;bottom:0;background:white;border-top:1px solid #eee;">
+      <span style="font-size:16px;color:#555;">|||</span>
+      <span style="font-size:18px;color:#555;">○</span>
+      <button onclick="closeOverlay('customerDetailScreen')" style="background:none;border:none;font-size:18px;cursor:pointer;color:#555;">‹</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     DELIVERY SCREEN  (Image 3 — invoice → proof → success)
+     Step 1: Invoice items
+══════════════════════════════ -->
+<div class="fs-overlay" id="deliveryScreen" style="display:none;">
+  <div class="fs-panel" id="delivStep1">
+    <div class="fs-topbar">
+      <button class="fs-back" onclick="closeOverlay('deliveryScreen');document.getElementById('customerDetailScreen').style.display='flex';">‹</button>
+      <div>
+        <div class="fs-title">11370497</div>
+        <div style="font-size:10px;color:#9aa0b0;text-align:center;">9 Products</div>
+      </div>
+    </div>
+    <div class="fs-body" style="padding:0;overflow-y:auto;">
+
+      <!-- Items header -->
+      <div style="padding:10px 16px 6px;border-bottom:1px solid #f0f1f5;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div id="delivCheckAll" onclick="toggleDelivCheckAll()" style="width:18px;height:18px;border:2px solid #d0d3dc;border-radius:3px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;"></div>
+            <span style="font-size:13px;font-weight:700;color:#1a2540;" id="delivItemsLbl">Items</span>
+          </div>
+          <span style="font-size:12px;color:#4a7ad4;font-weight:600;" id="delivHandlingLbl">See Handling Units ›</span>
+        </div>
+      </div>
+
+      <!-- Product rows matching Image 3 -->
+      <!-- Product 1 -->
+      <div style="padding:10px 16px;border-bottom:1px solid #f0f1f5;">
+        <div style="display:flex;align-items:flex-start;gap:10px;">
+          <div id="delivCheck1" onclick="toggleDelivCheck(1)" style="width:18px;height:18px;border:2px solid #d0d3dc;border-radius:3px;flex-shrink:0;margin-top:2px;cursor:pointer;display:flex;align-items:center;justify-content:center;"></div>
+          <div style="width:34px;height:34px;background:#f0f1f5;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#9aa0b0"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:12px;font-weight:700;color:#1a2540;">WINNER Cooked Ham 250g /50</div>
+            <div style="font-size:10px;color:#9aa0b0;">₱0.01 × 100 = ₱1</div>
+            <div style="font-size:10px;color:#9aa0b0;">Order- CS:100 | Inner:0 | EA:0</div>
+            <div style="font-size:10px;color:#9aa0b0;">1 CS:undefined EA | 1 Inner:1 EA</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0;">
+            <div style="display:flex;align-items:center;gap:4px;">
+              <div style="width:44px;height:26px;border:1.5px solid #e0e3ec;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#1a2540;">100</div>
+              <span style="font-size:9px;color:#9aa0b0;">Qty</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:4px;">
+              <div style="width:44px;height:26px;border:1.5px solid #e0e3ec;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#1a2540;">13.00</div>
+              <span style="font-size:9px;color:#9aa0b0;">KGs</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Product 2 -->
+      <div style="padding:10px 16px;border-bottom:1px solid #f0f1f5;">
+        <div style="display:flex;align-items:flex-start;gap:10px;">
+          <div id="delivCheck2" onclick="toggleDelivCheck(2)" style="width:18px;height:18px;border:2px solid #d0d3dc;border-radius:3px;flex-shrink:0;margin-top:2px;cursor:pointer;display:flex;align-items:center;justify-content:center;"></div>
+          <div style="width:34px;height:34px;background:#f0f1f5;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#9aa0b0"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:12px;font-weight:700;color:#1a2540;">WINNER Sweet Ham 250g /50</div>
+            <div style="font-size:10px;color:#9aa0b0;">₱0.01 × 200 = ₱1</div>
+            <div style="font-size:10px;color:#9aa0b0;">Order- CS:200 | Inner:0 | EA:0</div>
+            <div style="font-size:10px;color:#9aa0b0;">1 CS:undefined EA | 1 Inner:1 EA</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0;">
+            <div style="display:flex;align-items:center;gap:4px;">
+              <div style="width:44px;height:26px;border:1.5px solid #e0e3ec;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#1a2540;">200</div>
+              <span style="font-size:9px;color:#9aa0b0;">Qty</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:4px;">
+              <div style="width:44px;height:26px;border:1.5px solid #e0e3ec;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#1a2540;">25.00</div>
+              <span style="font-size:9px;color:#9aa0b0;">KGs</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Product 3 -->
+      <div style="padding:10px 16px;border-bottom:1px solid #f0f1f5;">
+        <div style="display:flex;align-items:flex-start;gap:10px;">
+          <div id="delivCheck3" onclick="toggleDelivCheck(3)" style="width:18px;height:18px;border:2px solid #d0d3dc;border-radius:3px;flex-shrink:0;margin-top:2px;cursor:pointer;display:flex;align-items:center;justify-content:center;"></div>
+          <div style="width:34px;height:34px;background:#f0f1f5;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#9aa0b0"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:12px;font-weight:700;color:#1a2540;">CHAMPION Hotdog Mini 250g /44</div>
+            <div style="font-size:10px;color:#9aa0b0;">₱0 × 400 = ₱1</div>
+            <div style="font-size:10px;color:#9aa0b0;">Order- CS:400 | Inner:0 | EA:0</div>
+            <div style="font-size:10px;color:#9aa0b0;">1 CS:undefined EA | 1 Inner:1 EA</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0;">
+            <div style="display:flex;align-items:center;gap:4px;">
+              <div style="width:44px;height:26px;border:1.5px solid #e0e3ec;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#1a2540;">400</div>
+              <span style="font-size:9px;color:#9aa0b0;">Qty</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:4px;">
+              <div style="width:44px;height:26px;border:1.5px solid #e0e3ec;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#1a2540;">44.00</div>
+              <span style="font-size:9px;color:#9aa0b0;">KGs</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Product 4 -->
+      <div style="padding:10px 16px;border-bottom:1px solid #f0f1f5;">
+        <div style="display:flex;align-items:flex-start;gap:10px;">
+          <div id="delivCheck4" onclick="toggleDelivCheck(4)" style="width:18px;height:18px;border:2px solid #d0d3dc;border-radius:3px;flex-shrink:0;margin-top:2px;cursor:pointer;display:flex;align-items:center;justify-content:center;"></div>
+          <div style="width:34px;height:34px;background:#f0f1f5;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#9aa0b0"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:12px;font-weight:700;color:#1a2540;">CHAMPION Chicken Hotdog Jumbo 4 250g /44</div>
+            <div style="font-size:10px;color:#9aa0b0;">₱0.01 × 100 = ₱1</div>
+            <div style="font-size:10px;color:#9aa0b0;">Order- CS:100 | Inner:0 | EA:0</div>
+            <div style="font-size:10px;color:#9aa0b0;">1 CS:undefined EA | 1 Inner:1 EA</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0;">
+            <div style="display:flex;align-items:center;gap:4px;">
+              <div style="width:44px;height:26px;border:1.5px solid #e0e3ec;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#1a2540;">100</div>
+              <span style="font-size:9px;color:#9aa0b0;">Qty</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:4px;">
+              <div style="width:44px;height:26px;border:1.5px solid #e0e3ec;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#1a2540;">11.00</div>
+              <span style="font-size:9px;color:#9aa0b0;">KGs</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- More products hint -->
+      <div style="padding:8px 16px;text-align:center;color:#9aa0b0;font-size:10px;border-bottom:1px solid #f0f1f5;">+ 5 more products · scroll to see all</div>
+
+      <!-- Pricing -->
+      <div style="padding:12px 16px;">
+        <div style="font-size:13px;font-weight:600;color:#1a2540;margin-bottom:8px;" id="delivPricingLbl">Pricing</div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;color:#5a6278;">
+          <span id="delivInvAmtLbl">Invoice amount</span>
+          <span style="font-weight:700;color:#1a2540;">₱9</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="fs-footer" style="display:flex;gap:10px;">
+      <button class="fs-fail-btn" id="delivFailBtn" onclick="showFailedDeliveryScreen()">Failed</button>
+      <button class="fs-proceed-btn" id="delivProceedBtn" style="flex:2;" onclick="showDeliverySuccessGuide_then_proof()">Proceed</button>
+    </div>
+    <div class="android-nav" style="background:white;border-top:1px solid #eee;">
+      <span style="font-size:16px;color:#555;">|||</span><span style="font-size:18px;color:#555;">○</span><span style="font-size:18px;color:#555;">‹</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     PROOF OF DELIVERY OVERLAY  (Image 3 middle)
+══════════════════════════════ -->
+<div class="fs-overlay" id="proofScreen" style="display:none;">
+  <div class="fs-panel">
+    <div class="fs-topbar">
+      <button class="fs-back" onclick="closeOverlay('proofScreen');document.getElementById('deliveryScreen').style.display='flex';">‹</button>
+      <span class="fs-title" id="proofTitleLbl">Proof of Delivery</span>
+    </div>
+    <div class="fs-body">
+      <!-- Photo proof -->
+      <div style="margin-bottom:16px;">
+        <div style="font-size:13px;font-weight:600;color:#1a2540;margin-bottom:10px;" id="proofPhotoLbl">Photo Proof</div>
+        <div style="display:flex;gap:10px;">
+          <div class="proof-photo-box" id="proofPhotoBox" onclick="document.getElementById('proofPhotoInput').click()">
+            <input type="file" id="proofPhotoInput" accept="image/*" capture="environment" style="display:none;" onchange="handleProofPhoto(event)"/>
+            <img id="proofPhotoPreview" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:8px;" alt="proof"/>
+            <div id="proofPhotoPlaceholder" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:4px;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="1.8"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              <span style="font-size:9px;color:#aaa;" id="proofAddPhotoLbl">Add photo</span>
+            </div>
+          </div>
+          <!-- second photo slot -->
+          <div class="proof-photo-box" style="border-style:dashed;">
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span style="font-size:9px;color:#bbb;margin-top:4px;">+📷</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Digital signature -->
+      <div style="margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-size:13px;font-weight:600;color:#1a2540;" id="proofSigLbl">Digital Signature</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4a7ad4" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        </div>
+        <canvas id="sigCanvas" width="308" height="100"
+          style="width:100%;height:100px;border:1.5px solid #e0e3ec;border-radius:10px;touch-action:none;cursor:crosshair;background:white;"
+          onmousedown="startSig(event)" onmousemove="drawSig(event)" onmouseup="stopSig()"
+          ontouchstart="startSigT(event)" ontouchmove="drawSigT(event)" ontouchend="stopSig()">
+        </canvas>
+        <div style="text-align:right;margin-top:4px;">
+          <button onclick="clearSig()" style="font-size:10px;color:#9aa0b0;background:none;border:none;cursor:pointer;" id="proofClearBtn">Clear</button>
+        </div>
+      </div>
+    </div>
+    <div id="proofErr" style="display:none;font-size:11px;color:#e74c3c;font-weight:600;text-align:center;padding:0 16px 8px;"></div>
+    <div class="fs-footer">
+      <button class="fs-proceed-btn" id="proofSubmitBtn" onclick="submitProof()">Submit</button>
+    </div>
+    <div class="android-nav" style="background:white;border-top:1px solid #eee;">
+      <span style="font-size:16px;color:#555;">|||</span><span style="font-size:18px;color:#555;">○</span><span style="font-size:18px;color:#555;">‹</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     SUCCESS SCREEN  (Image 3 right)
+══════════════════════════════ -->
+<div class="fs-overlay" id="successScreen" style="display:none;">
+  <div class="fs-panel">
+    <div class="fs-body" style="align-items:center;padding-top:30px;">
+      <!-- Green check -->
+      <div style="width:60px;height:60px;background:#22c55e;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:14px;box-shadow:0 4px 16px rgba(34,197,94,.35);">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div style="font-size:18px;font-weight:800;color:#1a2540;margin-bottom:6px;" id="successTitleLbl">Successfully Delivered</div>
+      <div style="background:#e8f5e9;border-radius:20px;padding:4px 12px;margin-bottom:4px;">
+        <span style="font-size:12px;font-weight:600;color:#2e7d32;">48140600A</span>
+        <span style="font-size:11px;color:#4caf50;margin-left:6px;">· Full Delivery</span>
+      </div>
+      <div style="font-size:11px;color:#9aa0b0;margin-bottom:20px;">10:42 AM, Today</div>
+
+      <!-- Proof photo thumbnail -->
+      <div style="width:100%;border-radius:12px;overflow:hidden;margin-bottom:14px;background:#f4f5f8;min-height:80px;display:flex;align-items:center;justify-content:center;" id="successPhotoWrap">
+        <span style="font-size:11px;color:#b0b6c4;">Photo proof will appear here</span>
+      </div>
+
+      <!-- Signature preview -->
+      <div style="width:100%;">
+        <div style="font-size:13px;font-weight:600;color:#1a2540;margin-bottom:8px;">Digital Signature</div>
+        <div style="border:1.5px solid #e0e3ec;border-radius:10px;padding:10px;background:white;">
+          <canvas id="successSigPreview" width="280" height="70" style="width:100%;height:70px;"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="fs-footer">
+      <button class="fs-proceed-btn" id="successContinueBtn" onclick="finishDelivery()">Continue</button>
+    </div>
+    <div class="android-nav" style="background:white;border-top:1px solid #eee;">
+      <span style="font-size:16px;color:#555;">|||</span><span style="font-size:18px;color:#555;">○</span><span style="font-size:18px;color:#555;">‹</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     FAILED REASON SCREEN  (Image 1)
+══════════════════════════════ -->
+<div class="fs-overlay" id="failedReasonScreen" style="display:none;">
+  <div class="fs-panel" style="background:#f8f9fc;">
+    <div class="fs-topbar" style="background:white;border-bottom:1px solid #f0f1f5;">
+      <button class="fs-back" onclick="closeOverlay('failedReasonScreen');openOverlay('deliveryScreen');">‹</button>
+      <div class="fs-title" id="failReasonTitle">Reason for failed invoice</div>
+      <div style="width:28px;"></div>
+    </div>
+
+    <div class="fs-body" style="padding:14px 16px;overflow-y:auto;">
+      <!-- Search bar -->
+      <div style="background:#2d2f3e;border-radius:28px;display:flex;align-items:center;padding:10px 16px;gap:10px;margin-bottom:20px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9aa0c0" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="failSearchInput" type="text" placeholder="Search" oninput="filterFailReasons(this.value)" style="flex:1;font-size:14px;color:#fff;background:none;border:none;outline:none;" />
+        <svg onclick="document.getElementById('failSearchInput').value='';filterFailReasons('');" style="cursor:pointer;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9aa0c0" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </div>
+
+      <!-- Reason options -->
+      <div id="failReasonList">
+        <div class="fail-reason-item selected" id="failReason1" onclick="selectFailReason(1)">
+          <div class="fail-radio selected" id="failRadio1"><div class="fail-radio-dot"></div></div>
+          <span class="fail-reason-lbl" id="failReasonLbl1">Store closed</span>
+          <span class="fail-selected-tag" id="failTag1">Selected</span>
+        </div>
+        <div class="fail-reason-item" id="failReason2" onclick="selectFailReason(2)">
+          <div class="fail-radio" id="failRadio2"></div>
+          <span class="fail-reason-lbl" id="failReasonLbl2">Wrong order</span>
+          <span class="fail-selected-tag" id="failTag2" style="display:none;">Selected</span>
+        </div>
+        <div class="fail-reason-item" id="failReason3" onclick="selectFailReason(3)">
+          <div class="fail-radio" id="failRadio3"></div>
+          <span class="fail-reason-lbl" id="failReasonLbl3">No cash</span>
+          <span class="fail-selected-tag" id="failTag3" style="display:none;">Selected</span>
+        </div>
+        <div class="fail-reason-item" id="failReason4" onclick="selectFailReason(4)">
+          <div class="fail-radio" id="failRadio4"></div>
+          <span class="fail-reason-lbl" id="failReasonLbl4">Owner not there</span>
+          <span class="fail-selected-tag" id="failTag4" style="display:none;">Selected</span>
+        </div>
+        <div class="fail-reason-item" id="failReason5" onclick="selectFailReason(5)">
+          <div class="fail-radio" id="failRadio5"></div>
+          <span class="fail-reason-lbl" id="failReasonLbl5">Not Attempted</span>
+          <span class="fail-selected-tag" id="failTag5" style="display:none;">Selected</span>
+        </div>
+        <div class="fail-reason-item" id="failReason6" onclick="selectFailReason(6)">
+          <div class="fail-radio" id="failRadio6"></div>
+          <span class="fail-reason-lbl" id="failReasonLbl6">Expired PO</span>
+          <span class="fail-selected-tag" id="failTag6" style="display:none;">Selected</span>
+        </div>
+        <div class="fail-reason-item" id="failReason7" onclick="selectFailReason(7)">
+          <div class="fail-radio" id="failRadio7"></div>
+          <span class="fail-reason-lbl" id="failReasonLbl7">Unserved Items</span>
+          <span class="fail-selected-tag" id="failTag7" style="display:none;">Selected</span>
+        </div>
+        <div class="fail-reason-item" id="failReason8" onclick="selectFailReason(8)">
+          <div class="fail-radio" id="failRadio8"></div>
+          <span class="fail-reason-lbl" id="failReasonLbl8">Store Inventory</span>
+          <span class="fail-selected-tag" id="failTag8" style="display:none;">Selected</span>
+        </div>
+        <div class="fail-reason-item" id="failReason9" onclick="selectFailReason(9)">
+          <div class="fail-radio" id="failRadio9"></div>
+          <span class="fail-reason-lbl" id="failReasonLbl9">Delivery Cut-off Time</span>
+          <span class="fail-selected-tag" id="failTag9" style="display:none;">Selected</span>
+        </div>
+        <div class="fail-reason-item" id="failReason10" onclick="selectFailReason(10)">
+          <div class="fail-radio" id="failRadio10"></div>
+          <span class="fail-reason-lbl" id="failReasonLbl10">For Re-deliver</span>
+          <span class="fail-selected-tag" id="failTag10" style="display:none;">Selected</span>
+        </div>
+        <div class="fail-reason-item" id="failReason11" onclick="selectFailReason(11)">
+          <div class="fail-radio" id="failRadio11"></div>
+          <span class="fail-reason-lbl" id="failReasonLbl11">Others</span>
+          <span class="fail-selected-tag" id="failTag11" style="display:none;">Selected</span>
+        </div>
+      </div>
+
+      <!-- Take photos -->
+      <div style="margin-bottom:20px;margin-top:18px;">
+        <div style="font-size:14px;font-weight:800;color:#1a2540;margin-bottom:12px;" id="failTakePhotoLbl">Take photos</div>
+        <div style="display:flex;gap:10px;">
+          <!-- Real photo upload slot -->
+          <div id="failPhotoSlot1" style="width:130px;height:110px;border-radius:12px;overflow:hidden;position:relative;background:#eef0f5;border:2px dashed #d0d3dc;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;flex-shrink:0;" onclick="document.getElementById('failPhotoInput').click()">
+            <input type="file" id="failPhotoInput" accept="image/*" capture="environment" style="display:none;" onchange="handleFailPhoto(event)"/>
+            <img id="failPhotoPreview" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" alt="fail proof"/>
+            <div id="failPhotoPlaceholder" style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5a6278" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="4"/><path d="M5 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-1l-2-3H9L7 7z"/><line x1="12" y1="2" x2="12" y2="4"/></svg>
+              <span style="font-size:10px;color:#8a90a0;font-weight:600;">Add photo</span>
+            </div>
+            <!-- Red X remove button (shown after photo is added) -->
+            <div id="failPhotoRemove" onclick="removeFailPhoto(event)" style="display:none;position:absolute;top:4px;right:4px;width:20px;height:20px;background:#e74c3c;border-radius:50%;display:none;align-items:center;justify-content:center;z-index:2;">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </div>
+          </div>
+          <!-- Second add photo slot -->
+          <div style="width:130px;height:110px;border-radius:12px;background:#eef0f5;border:2px dashed #d0d3dc;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;" onclick="document.getElementById('failPhotoInput').click()">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5a6278" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="4"/><path d="M5 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-1l-2-3H9L7 7z"/><line x1="12" y1="2" x2="12" y2="4"/></svg>
+            <span style="font-size:10px;color:#8a90a0;">Add photo</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fs-footer">
+      <button class="fs-proceed-btn" id="failSubmitBtn" onclick="showDeliveryFailedConfirm()" style="background:#1a2540;">Submit</button>
+    </div>
+    <div class="android-nav" style="background:white;border-top:1px solid #eee;">
+      <span style="font-size:16px;color:#555;">|||</span><span style="font-size:18px;color:#555;">○</span>
+      <button onclick="closeOverlay('failedReasonScreen');openOverlay('deliveryScreen');" style="background:none;border:none;font-size:18px;cursor:pointer;color:#555;">‹</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     DELIVERY FAILED CONFIRMATION  (Image 2)
+══════════════════════════════ -->
+<div class="fs-overlay" id="failedConfirmScreen" style="display:none;">
+  <div class="fs-panel" style="background:#eef0f5;">
+    <div class="fs-body" style="padding:0;overflow-y:auto;">
+
+      <!-- Receipt card -->
+      <div style="background:white;margin:16px;border-radius:16px;padding:28px 20px 0;box-shadow:0 2px 12px rgba(0,0,0,.08);position:relative;overflow:hidden;">
+        <!-- Red circle X -->
+        <div style="display:flex;justify-content:center;margin-bottom:16px;">
+          <div style="width:64px;height:64px;background:#e74c3c;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(231,76,60,.35);">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </div>
+        </div>
+        <div style="font-size:20px;font-weight:800;color:#1a2540;text-align:center;margin-bottom:12px;" id="failConfirmTitle">Delivery Failed</div>
+        <!-- Invoice pill -->
+        <div style="background:#f8f0f0;border-radius:20px;padding:6px 16px;display:inline-flex;gap:8px;margin-bottom:8px;align-self:center;width:fit-content;margin-left:auto;margin-right:auto;display:flex;justify-content:center;">
+          <span style="font-size:13px;font-weight:700;color:#1a2540;">11370497</span>
+          <span style="font-size:13px;font-weight:700;color:#e74c3c;">- Failed</span>
+        </div>
+        <div style="font-size:12px;color:#9aa0b0;text-align:center;margin-bottom:24px;" id="failConfirmTime">11:01 AM, Today 12 May 2026</div>
+        <!-- Wavy receipt bottom -->
+        <div style="margin:0 -20px;height:18px;background:#eef0f5;clip-path:polygon(0% 100%, 4.16% 0%, 8.33% 100%, 12.5% 0%, 16.66% 100%, 20.83% 0%, 25% 100%, 29.16% 0%, 33.33% 100%, 37.5% 0%, 41.66% 100%, 45.83% 0%, 50% 100%, 54.16% 0%, 58.33% 100%, 62.5% 0%, 66.66% 100%, 70.83% 0%, 75% 100%, 79.16% 0%, 83.33% 100%, 87.5% 0%, 91.66% 100%, 95.83% 0%, 100% 100%);"></div>
+      </div>
+
+      <!-- Reason section -->
+      <div style="background:white;margin:0 16px;border-radius:16px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,.06);">
+        <div style="font-size:14px;font-weight:800;color:#1a2540;margin-bottom:8px;" id="failConfirmReasonTitle">Reason for failed invoice</div>
+        <div style="font-size:14px;color:#1a2540;margin-bottom:14px;" id="failConfirmReasonText">Store closed</div>
+        <!-- Photo proof (real uploaded photo) -->
+        <div id="failConfirmPhotoWrap" style="width:140px;height:110px;border-radius:10px;overflow:hidden;background:#eef0f5;display:flex;align-items:center;justify-content:center;">
+          <img id="failConfirmPhoto" style="width:100%;height:100%;object-fit:cover;display:none;" alt="proof"/>
+          <div id="failConfirmNoPhoto" style="font-size:11px;color:#aaa;text-align:center;padding:8px;">No photo<br/>attached</div>
+        </div>
+      </div>
+
+    </div>
+    <div class="fs-footer" style="background:#eef0f5;padding:16px;">
+      <button class="fs-proceed-btn" id="failContinueBtn" onclick="finishFailedDelivery()" style="background:#1a2540;">Continue</button>
+    </div>
+    <div class="android-nav" style="background:white;border-top:1px solid #eee;">
+      <span style="font-size:16px;color:#555;">|||</span><span style="font-size:18px;color:#555;">○</span><span style="font-size:18px;color:#555;">‹</span>
+    </div>
+  </div>
+</div>
+
+</div><!-- /phone-shell -->
+<!-- All modals injected by app.js -->
+<script src="app.js"></script>
+</body>
+</html>
