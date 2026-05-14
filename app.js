@@ -175,6 +175,23 @@ const T = {
     failGuideNote: "If the customer cannot provide invoices, fill out the physical Proof of Delivery form. Ensure it is signed over printed name with date.",
     failGuideBtn:  "Understood!",
 
+    // ── Training blocker tips ──
+    cust1WrongTitle: "⚠️ Try Successful Delivery",
+    cust1WrongNote:  "For Customer 1, tap <strong>\"Proceed\"</strong> to practice a <strong>successful delivery</strong>. The \"Failed\" button is for the next customer.",
+    cust1WrongBtn:   "Got it — I'll tap Proceed!",
+    cust1CheckAllTitle: "☑️ Check All Items First",
+    cust1CheckAllNote:  "For a <strong>successful delivery</strong>, you must <strong>check all items</strong> in the list before tapping Proceed. Make sure every item is ticked ✓.",
+    cust1CheckAllBtn:   "Got it — I'll check all items!",
+
+    cust2WrongTitle: "⚠️ Try a Failed Delivery",
+    cust2WrongNote:  "For Customer 2, tap <strong>\"Failed\"</strong> to practice marking a <strong>failed delivery</strong>. Use Proceed only after learning this step.",
+    cust2WrongBtn:   "Got it — I'll tap Failed!",
+
+    cust3WrongTitle: "⚠️ Try a Partial Delivery",
+    cust3IntroTitle: "📦 Practice Partial Delivery",
+    cust3PartialHint:"For Customer 3, <strong>do NOT check all items</strong> — leave at least one unchecked so the system marks it as <strong>Partial Delivery</strong>.",
+    cust3WrongBtn:   "Got it — let me try again!",
+
     /* end delivery guide */
     endBadge: "Step 6 of 6 · End Delivery",
     endTitle: "End of Delivery Day",
@@ -341,6 +358,23 @@ const T = {
     failGuideNote: "Kung hindi makabigay ng invoice ang customer, punan ang pisikal na Proof of Delivery form. Siguraduhing may lagda at petsa.",
     failGuideBtn:  "Naiintindihan!",
 
+    // ── Training blocker tips ──
+    cust1WrongTitle: "⚠️ Subukan ang Matagumpay na Delivery",
+    cust1WrongNote:  "Para sa Customer 1, i-tap ang <strong>\"Proceed\"</strong> para sanayin ang <strong>matagumpay na delivery</strong>. Ang \"Failed\" ay para sa susunod na customer.",
+    cust1WrongBtn:   "Naiintindihan — I-tap ko ang Proceed!",
+    cust1CheckAllTitle: "☑️ I-check Muna ang Lahat ng Item",
+    cust1CheckAllNote:  "Para sa <strong>matagumpay na delivery</strong>, kailangan mong <strong>i-check ang lahat ng item</strong> sa listahan bago i-tap ang Proceed. Siguraduhing may tsek ang bawat item ✓.",
+    cust1CheckAllBtn:   "Naiintindihan — I-check ko ang lahat!",
+
+    cust2WrongTitle: "⚠️ Subukan ang Nabigong Delivery",
+    cust2WrongNote:  "Para sa Customer 2, i-tap ang <strong>\"Failed\"</strong> para sanayin ang <strong>nabigong delivery</strong>. Gamitin ang Proceed pagkatapos matutunan ito.",
+    cust2WrongBtn:   "Naiintindihan — I-tap ko ang Failed!",
+
+    cust3WrongTitle: "⚠️ Subukan ang Partial na Delivery",
+    cust3IntroTitle: "📦 Sanayin ang Partial na Delivery",
+    cust3PartialHint:"Para sa Customer 3, <strong>HUWAG tsekuhin ang lahat ng item</strong> — mag-iwan ng hindi bababa sa isa para ma-mark ng system bilang <strong>Partial Delivery</strong>.",
+    cust3WrongBtn:   "Naiintindihan — subukan ko ulit!",
+
     endBadge: "Hakbang 6 ng 6 · Tapusin ang Delivery",
     endTitle: "Katapusan ng Araw ng Delivery",
     endSteps: [
@@ -393,8 +427,8 @@ function showLangPicker() {
 
 function setLang(l) {
   lang = l;
+  stopAudio();
   dismissModal('langModal');
-  // Update static UI text
   applyLangToUI();
   setTimeout(() => showWelcomeModal(), 400);
 }
@@ -500,6 +534,13 @@ function goTo(i) {
   current = i;
   document.getElementById('slider').style.transform = `translateX(-${i * 33.333}%)`;
   updateDots(i);
+  // Screen audio cue
+  setTimeout(() => {
+    if (!audioEnabled) return;
+    if (window.speechSynthesis && window.speechSynthesis.speaking) return;
+    const cue = (SCREEN_AUDIO[lang] || SCREEN_AUDIO.en)[i];
+    if (cue) speak(cue);
+  }, 500);
 }
 
 /* ══════════════════════════════
@@ -547,6 +588,7 @@ function stepCard(opts) {
 ══════════════════════════════ */
 function showWelcomeModal() {
   if (window.skipGuides) return;
+  _narrateAfter({ title: t('welcomeTitle').replace('\n',' '), steps: [t('welcomeBody')], note: null });
   createModal('welcomeModal', `
     <div class="guide-card welcome-card">
       <div style="position:absolute;top:14px;right:14px;">
@@ -581,6 +623,7 @@ function showLangSwitch() {
 
 function showPreReqModal() {
   if (window.skipGuides) return;
+  _narrateAfter({ title: t('preReqTitle'), steps: t('preReqSteps'), note: t('preReqNote') });
   createModal('preReqModal', stepCard({
     id:'preReqModal', badge:t('preReqBadge'), badgeColor:'#0369a1', badgeLight:'#f0f9ff',
     icon:'✅', title:t('preReqTitle'), steps:t('preReqSteps'), note:t('preReqNote'),
@@ -589,6 +632,7 @@ function showPreReqModal() {
 }
 
 function showLoginErrorModal() {
+  _narrateAfter({ title: t('loginErrTitle'), steps: t('loginErrSteps'), note: t('loginErrNote') });
   createModal('loginErrModal', stepCard({
     id:'loginErrModal', badge:t('loginErrBadge'), badgeColor:'#e74c3c', badgeLight:'#fff0f0',
     icon:'🔐', title:t('loginErrTitle'), steps:t('loginErrSteps'), note:t('loginErrNote'),
@@ -598,6 +642,7 @@ function showLoginErrorModal() {
 
 function showLocationModal(isRetry) {
   if (window.skipGuides) return;
+  _narrateAfter({ title: isRetry ? t('locTitleRetry') : t('locTitle'), steps: t('locSteps'), note: t('locNote') });
   createModal('locationModal', stepCard({
     id:'locationModal',
     badge: isRetry ? t('locBadgeRetry') : t('locBadge'),
@@ -610,6 +655,7 @@ function showLocationModal(isRetry) {
 
 function showOdometerModal(isRetry) {
   if (window.skipGuides) return;
+  _narrateAfter({ title: isRetry ? t('odoTitleRetry') : t('odoTitle'), steps: t('odoSteps'), note: t('odoNote') });
   createModal('odoGuideModal', stepCard({
     id:'odoGuideModal',
     badge: isRetry ? t('odoBadgeRetry') : t('odoBadge'),
@@ -622,6 +668,7 @@ function showOdometerModal(isRetry) {
 
 function showCustomerGuideModal() {
   if (window.skipGuides) return;
+  _narrateAfter({ title: t('custTitle'), steps: t('custSteps'), note: t('custNote') });
   createModal('customerGuideModal', stepCard({
     id:'customerGuideModal', badge:t('custBadge'), badgeColor:'#7c3aed', badgeLight:'#f5f3ff',
     icon:'🏪', title:t('custTitle'), steps:t('custSteps'), note:t('custNote'),
@@ -631,6 +678,7 @@ function showCustomerGuideModal() {
 
 function showDeliverySuccessGuide() {
   if (window.skipGuides) return;
+  _narrateAfter({ title: t('succGuideTitle'), steps: t('succGuideSteps'), note: t('succGuideNote') });
   createModal('delivSuccessModal', stepCard({
     id:'delivSuccessModal', badge:t('succGuideBadge'), badgeColor:'#059669', badgeLight:'#ecfdf5',
     icon:'✅', title:t('succGuideTitle'), steps:t('succGuideSteps'), note:t('succGuideNote'),
@@ -640,6 +688,7 @@ function showDeliverySuccessGuide() {
 
 function showDeliveryFailedGuide() {
   if (window.skipGuides) return;
+  _narrateAfter({ title: t('failGuideTitle'), steps: t('failGuideSteps'), note: t('failGuideNote') });
   createModal('delivFailModal', stepCard({
     id:'delivFailModal', badge:t('failGuideBadge'), badgeColor:'#dc2626', badgeLight:'#fff0f0',
     icon:'❌', title:t('failGuideTitle'), steps:t('failGuideSteps'), note:t('failGuideNote'),
@@ -649,6 +698,7 @@ function showDeliveryFailedGuide() {
 
 function showEndDeliveryGuide() {
   if (window.skipGuides) return;
+  _narrateAfter({ title: t('endTitle'), steps: t('endSteps'), note: t('endNote') });
   const stepsHtml = t('endSteps').map((s,i) => `
     <div class="guide-step-item">
       <div class="guide-step-num" style="background:#475569;color:white;">${i+1}</div>
@@ -848,17 +898,27 @@ window.customers = [
 window.custOutcomes = { 1: null, 2: null, 3: null, 4: null }; // null | 'success' | 'failed'
 
 function openCust(n) {
-  // Always allow clicking — just don't show guide again if already done
   window.activeCustomer = n;
   updateCustomerDetailText();
   openOverlay('customerDetailScreen');
-  // Show guide only on FIRST visit
+
+  // Show guide only on FIRST visit (outcome still null)
   if (!window.custOutcomes[n]) {
     if (n === 1) {
+      // Customer 1: teach successful delivery
       setTimeout(() => showDeliverySuccessGuide(), 350);
     } else if (n === 2) {
+      // Customer 2: teach failed delivery
       setTimeout(() => showDeliveryFailedGuide(), 350);
+    } else if (n === 3) {
+      // Customer 3: teach partial delivery — show a dedicated tip
+      setTimeout(() => showTrainingBlocker(
+        t('cust3IntroTitle'),
+        t('cust3PartialHint'),
+        t('cust3WrongBtn')
+      ), 350);
     }
+    // Customer 4: no tip — free choice
   }
 }
 
@@ -915,36 +975,101 @@ function updateCustomerDetailText() {
   // Show or hide the Proceed to invoice button
   const proceedBtn = document.getElementById('custProceedBtn');
   if (proceedBtn) {
-    if (out === 'success' || out === 'failed' || out === 'partial') {
-      // Already completed — hide Proceed, show a status card instead
+    if (out === 'success') {
+      // Success — hide proceed, show simple success banner
       proceedBtn.style.display = 'none';
-      // Show completion banner if not already there
+      const reAttemptCard = document.getElementById('custReAttemptCard');
+      if (reAttemptCard) reAttemptCard.remove();
       let banner = document.getElementById('custCompletionBanner');
       if (!banner) {
         banner = document.createElement('div');
         banner.id = 'custCompletionBanner';
-        banner.style.cssText = 'border-radius:12px;padding:14px 16px;margin-top:4px;display:flex;align-items:center;gap:12px;';
+        banner.style.cssText = 'border-radius:12px;padding:14px 16px;margin-top:4px;display:flex;align-items:center;gap:12px;background:#f0fdf4;border:1.5px solid #86efac;';
         proceedBtn.parentNode.insertBefore(banner, proceedBtn.nextSibling);
       }
-      const colors = {
-        success: { bg:'#f0fdf4', border:'#86efac', icon:'✅', color:'#15803d', label:'Delivery Successful', sub:'This delivery has been completed successfully.' },
-        failed:  { bg:'#fff0f0', border:'#fca5a5', icon:'❌', color:'#b91c1c', label:'Delivery Failed',     sub:'This delivery was marked as failed.' },
-        partial: { bg:'#fffbeb', border:'#fde68a', icon:'⚠️', color:'#b45309', label:'Partial Delivery',    sub:'Not all items were delivered.' },
-      };
-      const c = colors[out];
-      banner.style.background = c.bg;
-      banner.style.border = '1.5px solid ' + c.border;
-      banner.innerHTML = '<div style="font-size:22px;flex-shrink:0;">' + c.icon + '</div>' +
-        '<div><div style="font-size:13px;font-weight:700;color:' + c.color + ';">' + c.label + '</div>' +
-        '<div style="font-size:11px;color:#6a7090;margin-top:2px;">' + c.sub + '</div></div>';
+      banner.innerHTML = '<div style="font-size:22px;flex-shrink:0;">✅</div>' +
+        '<div><div style="font-size:13px;font-weight:700;color:#15803d;">Delivery Successful</div>' +
+        '<div style="font-size:11px;color:#6a7090;margin-top:2px;">This delivery has been completed successfully.</div></div>';
+    } else if (out === 'failed' || out === 'partial') {
+      // Failed / Partial — show Re-attempt card matching reference image
+      proceedBtn.style.display = 'none';
+      const banner = document.getElementById('custCompletionBanner');
+      if (banner) banner.remove();
+
+      let card = document.getElementById('custReAttemptCard');
+      if (!card) {
+        card = document.createElement('div');
+        card.id = 'custReAttemptCard';
+        proceedBtn.parentNode.insertBefore(card, proceedBtn.nextSibling);
+      }
+
+      const custN   = window.activeCustomer || 1;
+      const custObj = window.customers[custN - 1];
+      const isPartial = out === 'partial';
+      const badgeColor = isPartial ? '#f59e0b' : '#e74c3c';
+      const badgeText  = isPartial ? 'Partial' : 'Failed';
+
+      card.style.cssText = 'background:white;border:1.5px solid #e8eaf0;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-top:6px;';
+      card.innerHTML = `
+        <!-- Invoice number + status -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <span style="font-size:14px;font-weight:800;color:#1a2540;">${custObj ? custObj.invoice : '11370497'}</span>
+          <span style="background:${isPartial ? '#fffbeb' : '#fff0f0'};border:1.5px solid ${isPartial ? '#fde68a' : '#fca5a5'};border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:${badgeColor};">${badgeText}</span>
+        </div>
+        <!-- Salesman row -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div style="display:flex;align-items:center;gap:6px;background:#f8f9fc;border-radius:8px;padding:7px 10px;flex:1;margin-right:8px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1a2540" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07"/><path d="M1 1l22 22"/></svg>
+            <span style="font-size:12px;color:#1a2540;font-weight:600;">${custObj ? custObj.salesman : 'JENTEC NAGA-FROZEN'}</span>
+          </div>
+          <!-- Re-attempt count badge -->
+          <div style="background:#f59e0b;border-radius:20px;padding:5px 10px;display:flex;align-items:center;gap:4px;flex-shrink:0;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            <span style="font-size:11px;font-weight:700;color:white;">1 Times</span>
+          </div>
+        </div>
+        <!-- Amount + Collected -->
+        <div style="display:flex;justify-content:space-between;margin-bottom:14px;">
+          <div>
+            <div style="font-size:11px;color:#9aa0b0;margin-bottom:3px;">Amount</div>
+            <div style="font-size:16px;font-weight:800;color:#1a2540;">${custObj ? custObj.amount : '₱9'}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:11px;color:#9aa0b0;margin-bottom:3px;">Collected</div>
+            <div style="font-size:16px;font-weight:700;color:#9aa0b0;">-</div>
+          </div>
+        </div>
+        <!-- Re-attempt button -->
+        <button onclick="reAttemptDelivery()" style="width:100%;padding:14px;background:#1a2540;color:white;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:.2px;">Re attempt</button>`;
     } else {
-      // Not yet visited — show Proceed button, hide banner
+      // Not yet visited — show Proceed button, hide everything else
       proceedBtn.style.display = '';
       const banner = document.getElementById('custCompletionBanner');
       if (banner) banner.remove();
+      const card = document.getElementById('custReAttemptCard');
+      if (card) card.remove();
     }
   }
 }
+
+function reAttemptDelivery() {
+  const n = window.activeCustomer || 1;
+  // Unlock the customer — remove outcome so they can go through the flow again
+  window.custOutcomes[n] = null;
+  // Re-enable the row in the customer list
+  const itemEl   = document.getElementById('custItem' + n);
+  const numEl    = document.getElementById('custNum' + n);
+  const statusEl = document.getElementById('custStatus' + n);
+  if (itemEl)   { itemEl.style.opacity = ''; itemEl.style.pointerEvents = ''; }
+  if (numEl)    numEl.style.background = '#4a7ad4';
+  if (statusEl) { statusEl.textContent = 'Not visited'; statusEl.style.color = '#9aa0b0'; }
+  // Update tabs
+  updateListItemStatus(n, null);
+  // Close detail screen and go straight to delivery
+  closeOverlay('customerDetailScreen');
+  setTimeout(() => openDeliveryScreen(), 280);
+}
+
 
 function updateListItemStatus(n, outcome) {
   window.custOutcomes[n] = outcome;
@@ -1008,6 +1133,92 @@ function openDeliveryScreen() {
   closeOverlay('customerDetailScreen');
   setTimeout(()=>openOverlay('deliveryScreen'),280);
 }
+/* ══════════════════════════════
+   TRAINING BLOCKER MODALS
+══════════════════════════════ */
+function showTrainingBlocker(title, note, btn, onClose) {
+  const id = 'trainingBlockerModal';
+  dismissModal(id);
+  const html = `
+    <div class="guide-overlay" id="${id}" onclick="if(event.target.id==='${id}')closeTrainingBlocker('${id}')">
+      <div class="guide-card" style="border-radius:28px;margin:20px;overflow:hidden;max-width:340px;width:calc(100% - 40px);align-self:center;">
+        <div class="guide-card-top" style="background:#fff7ed;padding:24px 22px 18px;text-align:center;">
+          <div style="font-size:44px;margin-bottom:10px;">🚫</div>
+          <h2 class="guide-title" style="color:#92400e;font-size:17px;line-height:1.4;">${title}</h2>
+        </div>
+        <div class="guide-card-body" style="padding:18px 22px 22px;">
+          <div class="guide-note" style="border-left:3px solid #f59e0b;background:#fffbeb;font-size:13px;line-height:1.6;margin-bottom:18px;">
+            <span>${note}</span>
+          </div>
+          <button class="guide-btn" style="background:#1a2540;"
+            onclick="closeTrainingBlocker('${id}')">${btn}</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+  window._trainingBlockerCallback = onClose || null;
+}
+
+function closeTrainingBlocker(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.classList.add('hiding');
+    setTimeout(() => el.remove(), 350);
+  }
+  if (window._trainingBlockerCallback) {
+    window._trainingBlockerCallback();
+    window._trainingBlockerCallback = null;
+  }
+}
+
+/* ══════════════════════════════
+   DELIVERY SCREEN BUTTONS — CUSTOMER-AWARE
+══════════════════════════════ */
+function onDelivProceedTapped() {
+  const n = window.activeCustomer || 1;
+
+  if (n === 1) {
+    // Customer 1 must check ALL items for a full successful delivery
+    const allChecked = Array.from({length: DELIV_CHECK_TOTAL}, (_, i) => !!delivChecked[i + 1]).every(Boolean);
+    if (!allChecked) {
+      showTrainingBlocker(t('cust1CheckAllTitle'), t('cust1CheckAllNote'), t('cust1CheckAllBtn'));
+      return;
+    }
+  }
+
+  if (n === 2) {
+    // Customer 2 must use Failed — block Proceed
+    showTrainingBlocker(t('cust2WrongTitle'), t('cust2WrongNote'), t('cust2WrongBtn'));
+    return;
+  }
+  if (n === 3) {
+    // Customer 3 must end up Partial — block if ALL items are checked
+    const allChecked = Array.from({length: DELIV_CHECK_TOTAL}, (_, i) => !!delivChecked[i + 1]).every(Boolean);
+    if (allChecked) {
+      showTrainingBlocker(t('cust3WrongTitle'), t('cust3PartialHint'), t('cust3WrongBtn'));
+      return;
+    }
+  }
+  // All other customers (1 with all checked, 4) or Customer 3 with partial items — proceed normally
+  showDeliverySuccessGuide_then_proof();
+}
+
+function onDelivFailTapped() {
+  const n = window.activeCustomer || 1;
+  if (n === 1) {
+    // Customer 1 must use Proceed (success) — block Failed
+    showTrainingBlocker(t('cust1WrongTitle'), t('cust1WrongNote'), t('cust1WrongBtn'));
+    return;
+  }
+  if (n === 3) {
+    // Customer 3 must be Partial (via Proceed with unchecked items) — block Failed
+    showTrainingBlocker(t('cust3WrongTitle'), t('cust3PartialHint'), t('cust3WrongBtn'));
+    return;
+  }
+  // Customer 2 and 4 — allow failed flow
+  showFailedDeliveryScreen();
+}
+
 function showDeliverySuccessGuide_then_proof() {
   // Check if all items are ticked — if not, this will be Partial
   const allChecked = Array.from({length: DELIV_CHECK_TOTAL}, (_, i) => !!delivChecked[i + 1]).every(Boolean);
@@ -1127,18 +1338,14 @@ function showDeliveryFailedConfirm() {
 
 function finishFailedDelivery() {
   const n = window.activeCustomer || 1;
-  const reasonIdx = (window.selectedFailReason || 1) - 1;
-  const reason = window.failReasonLabels[reasonIdx];
-  // "Wrong order" → Partial; everything else → Failed
-  const outcome = (reason === 'Wrong order') ? 'partial' : 'failed';
   closeOverlay('failedConfirmScreen');
   // Reset proof screen for next use
   clearSig(); sigCtx = null;
   const prev = document.getElementById('proofPhotoPreview'); if(prev){prev.style.display='none'; prev.src='';}
   const ph = document.getElementById('proofPhotoPlaceholder'); if(ph) ph.style.display='flex';
   window.proofMode = null;
-  updateListItemStatus(n, outcome);
-  showToast(outcome === 'partial' ? '⚠️ Delivery marked as partial' : (t('failToast') || 'Delivery marked as failed'));
+  updateListItemStatus(n, 'failed');
+  showToast(t('failToast') || '✗ Delivery marked as failed');
 }
 
 /* ── Item Checkboxes ── */
@@ -1686,22 +1893,33 @@ function performLogout() {
     const blurEl = document.getElementById('odoBlurOverlay');
     const listWrap = document.getElementById('odoListWrap');
     if (listWrap) { listWrap.classList.remove('unlocked'); listWrap.classList.add('locked'); }
-    // Restore blur overlay if missing
-    if (!blurEl && listWrap) {
-      const newBlur = document.createElement('div');
-      newBlur.id = 'odoBlurOverlay';
-      newBlur.className = 'odo-blur-overlay';
-      newBlur.innerHTML = `<div class="odo-lock-badge"><span>🔒</span><span>${t('lockLabel')}</span></div>`;
-      listWrap.parentNode.insertBefore(newBlur, listWrap.nextSibling);
+    // Restore blur overlay if missing — must be inside odoListWrap
+    if (listWrap) {
+      let blurElCheck = document.getElementById('odoBlurOverlay');
+      if (!blurElCheck) {
+        const newBlur = document.createElement('div');
+        newBlur.id = 'odoBlurOverlay';
+        newBlur.className = 'odo-blur-overlay';
+        newBlur.innerHTML = `<div class="odo-lock-badge"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span id="lockBadgeSpan">${t('lockLabel')}</span></div>`;
+        listWrap.insertBefore(newBlur, listWrap.firstChild);
+      } else {
+        // If it exists but was hidden, restore it
+        blurElCheck.classList.remove('hidden');
+        blurElCheck.style.display = '';
+        const lockSpan = blurElCheck.querySelector('#lockBadgeSpan') || blurElCheck.querySelector('span:last-child');
+        if (lockSpan) lockSpan.textContent = t('lockLabel');
+      }
     }
     // Reset location dot
     const locDot = document.getElementById('locDot');
     if (locDot) locDot.textContent = '⚪';
-    // Reset login fields
-    const userField = document.getElementById('loginUser');
-    const passField = document.getElementById('loginPass');
-    if (userField) userField.value = '';
-    if (passField) passField.value = '';
+    // Reset login fields (correct IDs from HTML)
+    const userField = document.getElementById('screenUsername');
+    const passField = document.getElementById('screenPassword');
+    if (userField) { userField.value = ''; userField.style.borderBottomColor = ''; }
+    if (passField) { passField.value = ''; passField.style.borderBottomColor = ''; }
+    const loginErr = document.getElementById('screenError');
+    if (loginErr) { loginErr.style.display = 'none'; loginErr.textContent = ''; }
     // Go to login screen
     goTo(0);
 
@@ -1764,6 +1982,315 @@ function repeatWithTips() {
 
 function repeatWithoutTips() {
   dismissModal('repeatChoiceModal');
-  // Skip all guide modals — user gets straight flow, no tip popups
+  // Skip all guide modals — user goes straight through the flow without tip popups
   window.skipGuides = true;
+  // Still need to kick off the app — go straight to login (already on screen 0)
+  // No language picker or welcome modal; user just logs in directly
+  setTimeout(() => {
+    showToast('⚡ Tips skipped — log in to begin');
+  }, 350);
 }
+
+/* ══════════════════════════════════════════════
+   AUDIO NARRATION SYSTEM
+   Uses Web Speech API (SpeechSynthesis)
+   – Reads every guide modal aloud
+   – Bilingual: EN uses en-US voice, TL uses fil-PH / tl-PH
+   – Floating audio bar appears whenever narration is active
+══════════════════════════════════════════════ */
+
+let audioEnabled   = true;   // user can toggle
+let currentUtter   = null;   // active SpeechSynthesisUtterance
+let audioQueue     = [];     // sentences queued for sequential reading
+let audioPlaying   = false;
+
+/* ── Voice selection ── */
+function pickVoice(langCode) {
+  const voices = window.speechSynthesis.getVoices();
+  const priority = langCode === 'tl'
+    ? ['fil-PH','fil','tl-PH','tl','en-PH','en-US','en']
+    : ['en-US','en-GB','en-AU','en'];
+  for (const code of priority) {
+    const v = voices.find(v => v.lang.toLowerCase().startsWith(code.toLowerCase()));
+    if (v) return v;
+  }
+  return voices[0] || null;
+}
+
+/* ── Speak a plain text string ── */
+function speak(text, onEnd) {
+  if (!audioEnabled || !('speechSynthesis' in window)) { onEnd && onEnd(); return; }
+  // Strip HTML tags
+  const plain = text.replace(/<[^>]+>/g, '').replace(/&[a-z]+;/gi,'').replace(/⚠️|📍|💡|🔋|📡|📱|→|←|•/g,'').trim();
+  if (!plain) { onEnd && onEnd(); return; }
+
+  window.speechSynthesis.cancel();
+
+  const utter = new SpeechSynthesisUtterance(plain);
+  utter.lang  = lang === 'tl' ? 'fil-PH' : 'en-US';
+  utter.rate  = 0.92;
+  utter.pitch = 1.0;
+  utter.volume = 1.0;
+
+  const voice = pickVoice(lang);
+  if (voice) utter.voice = voice;
+
+  utter.onend   = () => { audioPlaying = false; updateAudioBar(); onEnd && onEnd(); };
+  utter.onerror = () => { audioPlaying = false; updateAudioBar(); onEnd && onEnd(); };
+
+  currentUtter = utter;
+  audioPlaying = true;
+  updateAudioBar();
+  window.speechSynthesis.speak(utter);
+}
+
+/* ── Queue multiple sentences and read them one by one ── */
+function speakQueue(sentences) {
+  audioQueue = [...sentences];
+  speakNext();
+}
+
+function speakNext() {
+  if (!audioQueue.length) { audioPlaying = false; updateAudioBar(); return; }
+  const s = audioQueue.shift();
+  speak(s, speakNext);
+}
+
+/* ── Stop narration ── */
+function stopAudio() {
+  audioQueue = [];
+  window.speechSynthesis.cancel();
+  audioPlaying = false;
+  updateAudioBar();
+}
+
+/* ── Toggle play / pause ── */
+function toggleAudio() {
+  if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
+    window.speechSynthesis.pause();
+    audioPlaying = false;
+    updateAudioBar();
+  } else if (window.speechSynthesis.paused) {
+    window.speechSynthesis.resume();
+    audioPlaying = true;
+    updateAudioBar();
+  }
+}
+
+/* ── Master on/off toggle ── */
+function toggleAudioEnabled() {
+  audioEnabled = !audioEnabled;
+  if (!audioEnabled) stopAudio();
+  updateAudioBar();
+  updateAudioToggleBtn();
+  showToast(audioEnabled ? '🔊 Audio narration ON' : '🔇 Audio narration OFF');
+}
+
+/* ════════════════════════════
+   FLOATING AUDIO BAR
+   Appears at bottom while speaking
+════════════════════════════ */
+function ensureAudioBar() {
+  if (document.getElementById('audioBar')) return;
+  const bar = document.createElement('div');
+  bar.id = 'audioBar';
+  bar.style.cssText = `
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+    background:rgba(26,37,64,.96); color:white;
+    border-radius:40px; padding:10px 18px;
+    display:flex; align-items:center; gap:12px;
+    box-shadow:0 8px 28px rgba(0,0,0,.35);
+    z-index:10001; font-family:'DM Sans',sans-serif;
+    backdrop-filter:blur(10px);
+    transition:opacity .3s, transform .3s;
+    opacity:0; pointer-events:none;
+    min-width:220px; justify-content:space-between;
+  `;
+  bar.innerHTML = `
+    <!-- Waveform animation -->
+    <div id="audioWave" style="display:flex;align-items:center;gap:3px;height:20px;">
+      ${[1,1.6,1.2,1.8,1,1.4,1.7,1.1].map((h,i)=>`
+        <div style="
+          width:3px; border-radius:2px; background:#4cc9f0;
+          height:${Math.round(h*8)}px;
+          animation:wavePulse 0.8s ${(i*0.1).toFixed(1)}s ease-in-out infinite alternate;
+          will-change:transform;
+        "></div>`).join('')}
+    </div>
+
+    <!-- Label -->
+    <span id="audioBarLabel" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.85);flex:1;padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;">
+      Narrating…
+    </span>
+
+    <!-- Play/Pause -->
+    <button id="audioPlayBtn" onclick="toggleAudio()" style="
+      width:30px;height:30px;border-radius:50%;border:none;
+      background:rgba(255,255,255,.15);color:white;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;font-size:13px;
+      transition:background .15s;
+    ">⏸</button>
+
+    <!-- Stop -->
+    <button onclick="stopAudio()" style="
+      width:30px;height:30px;border-radius:50%;border:none;
+      background:rgba(255,255,255,.12);color:rgba(255,255,255,.7);cursor:pointer;
+      display:flex;align-items:center;justify-content:center;font-size:12px;
+      transition:background .15s;
+    ">⏹</button>
+  `;
+  document.body.appendChild(bar);
+
+  // Inject wave animation keyframe
+  if (!document.getElementById('waveStyle')) {
+    const s = document.createElement('style');
+    s.id = 'waveStyle';
+    s.textContent = `
+      @keyframes wavePulse {
+        from { transform: scaleY(1); }
+        to   { transform: scaleY(2.8); }
+      }
+      #audioBar.speaking { opacity:1 !important; pointer-events:auto !important; }
+      #audioBar.paused   { opacity:0.75 !important; pointer-events:auto !important; }
+    `;
+    document.head.appendChild(s);
+  }
+}
+
+function updateAudioBar() {
+  ensureAudioBar();
+  const bar      = document.getElementById('audioBar');
+  const playBtn  = document.getElementById('audioPlayBtn');
+  const wave     = document.getElementById('audioWave');
+
+  if (audioPlaying) {
+    bar.classList.add('speaking');
+    bar.classList.remove('paused');
+    if (playBtn) playBtn.textContent = '⏸';
+    if (wave) wave.style.opacity = '1';
+  } else if (window.speechSynthesis.paused) {
+    bar.classList.add('paused');
+    bar.classList.remove('speaking');
+    if (playBtn) playBtn.textContent = '▶';
+    if (wave) wave.style.opacity = '0.4';
+  } else {
+    bar.classList.remove('speaking','paused');
+  }
+}
+
+/* ════════════════════════════
+   FLOATING AUDIO TOGGLE BUTTON
+   Always visible so user can turn narration on/off
+════════════════════════════ */
+function injectAudioToggleBtn() {
+  if (document.getElementById('audioToggleBtn')) return;
+  const btn = document.createElement('button');
+  btn.id = 'audioToggleBtn';
+  btn.onclick = toggleAudioEnabled;
+  btn.title   = 'Toggle audio narration';
+  btn.style.cssText = `
+    position:fixed; top:14px; right:16px; z-index:10002;
+    width:38px; height:38px; border-radius:50%; border:none;
+    background:rgba(26,37,64,.88); color:white;
+    font-size:16px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 4px 14px rgba(0,0,0,.25);
+    backdrop-filter:blur(8px);
+    transition:background .2s, transform .1s;
+  `;
+  btn.textContent = '🔊';
+  btn.addEventListener('mouseenter', () => btn.style.background = 'rgba(26,37,64,1)');
+  btn.addEventListener('mouseleave', () => btn.style.background = 'rgba(26,37,64,.88)');
+  document.body.appendChild(btn);
+}
+
+function updateAudioToggleBtn() {
+  const btn = document.getElementById('audioToggleBtn');
+  if (btn) btn.textContent = audioEnabled ? '🔊' : '🔇';
+}
+
+/* ════════════════════════════
+   MODAL NARRATION BUILDER
+   Reads title + steps + note of any guide modal
+════════════════════════════ */
+function narrateModal(opts) {
+  if (!audioEnabled) return;
+  // Wait for voices to be available
+  const go = () => {
+    const sentences = [];
+
+    // Title
+    if (opts.title) sentences.push(opts.title.replace(/<[^>]+>/g,''));
+
+    // Steps
+    if (opts.steps && Array.isArray(opts.steps)) {
+      opts.steps.forEach((s, i) => {
+        const clean = s.replace(/<[^>]+>/g,'').replace(/&[a-z]+;/gi,'').trim();
+        sentences.push(`Step ${i+1}: ${clean}`);
+      });
+    } else if (typeof opts.steps === 'string') {
+      sentences.push(opts.steps.replace(/<[^>]+>/g,'').trim());
+    }
+
+    // Note
+    if (opts.note) {
+      const cleanNote = opts.note.replace(/<[^>]+>/g,'').replace(/⚠️|💡/g,'').trim();
+      sentences.push(`Note: ${cleanNote}`);
+    }
+
+    // Update bar label
+    const label = document.getElementById('audioBarLabel');
+    if (label) label.textContent = opts.title ? opts.title.replace(/<[^>]+>/g,'') : 'Narrating…';
+
+    speakQueue(sentences);
+  };
+
+  // Voices may not be loaded yet on first run
+  if (window.speechSynthesis.getVoices().length === 0) {
+    window.speechSynthesis.onvoiceschanged = go;
+  } else {
+    go();
+  }
+}
+
+/* ════════════════════════════
+   AUDIO: NARRATE AFTER MODAL SHOWS
+   Called directly inside each guide function — no function overriding.
+════════════════════════════ */
+function _narrateAfter(opts) {
+  setTimeout(() => narrateModal(opts), 600);
+}
+
+/* ════════════════════════════
+   SCREEN TRANSITION AUDIO CUES
+════════════════════════════ */
+const SCREEN_AUDIO = {
+  en: {
+    0: null,
+    1: 'Home screen. Your customer list is here. Pull down from the top to open Location settings.',
+    2: 'Payment details screen. Review the amount, select payment mode, then tap Proceed.',
+  },
+  tl: {
+    0: null,
+    1: 'Home screen. Nandito ang iyong listahan ng customer. I-pull down mula sa itaas para buksan ang Location settings.',
+    2: 'Payment details screen. Suriin ang halaga, piliin ang paraan ng pagbabayad, tapos i-tap ang Ituloy.',
+  }
+};
+
+/* ════════════════════════════
+   INIT
+════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  injectAudioToggleBtn();
+  ensureAudioBar();
+
+  if (window.speechSynthesis) {
+    window.speechSynthesis.getVoices();
+    window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+  }
+});
+
+// Stop audio on Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') stopAudio();
+});
